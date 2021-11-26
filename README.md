@@ -1,6 +1,7 @@
 # dna_encoding
 
 Programming recommendations
+
 1.Every function needs to be thoroughly documented and easy to understand. Use Docstring Conventions as a template.
 
 2.Code formatting must follow PEP 8 style convention. This can be easily achieved using some IDE with a PEP 8 extension. I can recommend VSCodium as it has integrated (but disabled by default) PEP 8 code check.
