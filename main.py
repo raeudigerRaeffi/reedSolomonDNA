@@ -36,7 +36,7 @@ def two_byte_split(data_string):
     '''
     two_byte_set = []
     if len(data_string)%2 != 0:
-        data_string = data_string + ' '                                                      #
+        data_string = data_string + ' '                                                      
     for i in range(0, len(data_string), 2):
         two_byte_set.append(data_string[i] + data_string[i+1])
     # BYTE CONVERTIERUNG FEHLT NOCH ---------> [    two_byte_set.encode('utf-8')    ]
