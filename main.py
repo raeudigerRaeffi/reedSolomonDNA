@@ -1,5 +1,7 @@
 # Import
-
+import numpy as np
+import galois
+import time
 
 
 # Load DataSet (easy load)
@@ -51,9 +53,9 @@ if __name__ == '__main__':
     # 2. Split the data into sets of two bytes
     two_byte_set = two_byte_split(data_string)
     # 3. Transformation to a Galois Field of size 47 (256^2 --> 47^3)
-    '''
-    Es gibt ein galois Package. Das kann ein GF(47^3) erzeugen.
-    Darf ich das nutzen?
-    '''
+    GF47_3 = galois.GF(47**3)
+    print(GF47_3)
     
-    print(two_byte_set)
+    
+    # Performance counter
+    print(str(time.perf_counter()/1000)+' s')
