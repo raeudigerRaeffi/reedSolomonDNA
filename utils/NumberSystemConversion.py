@@ -5,8 +5,11 @@ class NumberSystemConversion():
     # Split the data
     def two_byte_conversion(data_string):
         '''
-        Check if the given string is even, if not append a space.
-        Split the string into a list of 2 byte subsets of the given string.
+        The string length is checked. If the number of characters in the string
+        is even, a direct division into 2-byte subsets is possible, otherwise a
+        space must be inserted at the end of the text.
+        The 2-byte subset is converted by a polynomial to a decimal number.
+        Return the list of 2-byte subset decimals.
         
         Parameters
         ----------
@@ -14,7 +17,7 @@ class NumberSystemConversion():
         
         Returns
         -------
-        two_byte_set : list
+        two_byte_set : list of 2-byte subset decimals
         '''
         two_byte_set = []
         if len(data_string) % 2 != 0:
