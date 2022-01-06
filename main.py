@@ -1,10 +1,9 @@
 # Import
 import numpy as np
-import galois
 import time
 import random
 import utils.NumberSystemConversion as nsc
-
+import utils.dna_wheel as dna_wheel
 
 # Load DataSet (easy load)
 def load_dataset(filepath='data/the_federal_charter_of_1291.txt'):
@@ -28,6 +27,11 @@ if __name__ == '__main__':
     '''
     Main function
     '''
+    
+    dna_wheel_instance = dna_wheel()
+    print(dna_wheel_instance.pair_to_number)
+    
+    
     
     # 1. Load the data
     data_string = load_dataset()
