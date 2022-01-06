@@ -1,9 +1,8 @@
 # Import
 import numpy as np
-import galois
 import time
 import random
-
+import utils.dna_wheel as dna_wheel
 
 # Load DataSet (easy load)
 def load_dataset(filepath='data/the_federal_charter_of_1291.txt'):
@@ -45,42 +44,8 @@ if __name__ == '__main__':
     Main function
     '''
     
-    
-    # index oder poly oder andere???
-    array = list(range(47))
-    array.append('*')
-    random.shuffle(array)
-    
-    # Dict für integer - DNA codon? --> Klasse
-    dna_codon_wheel = {
-        'ATC':None, 'ATA':None, 'ATG':None,  # 'ATT':None,
-        'ACT':None, 'ACA':None, 'ACG':None,  # 'ACC':None,
-        'AAT':None, 'AAC':None, 'AAG':None,  # 'AAA':None,
-        'AGT':None, 'AGC':None, 'AGA':None,  # 'AGG':None,  
-        
-        'GTC':None, 'GTA':None, 'GTG':None, # 'GTT':None,
-        'GCT':None, 'GCA':None, 'GCG':None, # 'GCC':None,
-        'GAT':None, 'GAC':None, 'GAG':None, # 'GAA':None,
-        'GGT':None, 'GGC':None, 'GGA':None, # 'GGG':None, 
-        
-        'TTC':None, 'TTA':None, 'TTG':None, # 'TTT':None,
-        'TCT':None, 'TCA':None, 'TCG':None, # 'TCC':None, 
-        'TAT':None, 'TAC':None, 'TAG':None, # 'TAA':None,
-        'TGT':None, 'TGC':None, 'TGA':None, # 'TGG':None,
-        
-        'CTC':None, 'CTA':None, 'CTG':None, # 'CTT':None,
-        'CCT':None, 'CCA':None, 'CCG':None, # 'CCC':None,
-        'CAT':None, 'CAC':None, 'CAG':None, # 'CAA':None,
-        'CGT':None, 'CGC':None, 'CGA':None  # 'CGG':None, 
-    }
-    
-    index = 0
-    for key in dna_codon_wheel:
-        dna_codon_wheel[key] = array[index]
-        index += 1
-    print(dna_codon_wheel['37'])
-    
-    
+    dna_wheel_instance = dna_wheel()
+    print(dna_wheel_instance.pair_to_number)
     
     
     
