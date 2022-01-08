@@ -40,7 +40,10 @@ class Reed_Solomon() :
         # check if message divides by generator if yes no error -> return message
         if np.array_equal((recieved_message % self.generator_polynominal).coef % self.field_size, np.zeros(self.two_s)):
             return recieved_message[self.two_s:self.message_length]
-        pass
+        else:
+            # error detected obtain syndome -> msg 
+            syndrome = (recieved_message % self.generator_polynominal).coef % self.field_size
+            
 
     def return_generator_polynominal(self):
         primitive_element = self.find_primitive_element()
