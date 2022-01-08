@@ -37,6 +37,9 @@ class Reed_Solomon() :
     # params message : np.array of length message_length
     # output np.array of length payload_length
     def decode(self, recieved_message):
+        # check if message divides by generator if yes no error -> return message
+        if np.array_equal((recieved_message % self.generator_polynominal).coef % self.field_size, np.zeros(self.two_s)):
+            return recieved_message[self.two_s:self.message_length]
         pass
 
     def return_generator_polynominal(self):
