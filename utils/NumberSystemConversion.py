@@ -25,12 +25,12 @@ class NumberSystemConversion():
 
         for i in range(0, len(data_string), 2):
             letter_1 = ord(data_string[i])
-            letter_2 = ord(data_string[i+1])
-            two_byte_set.append(letter_1*256 + letter_2*1)
+            letter_2 = ord(data_string[i+1]) 
+            two_byte_set.append(letter_1*256 + letter_2*1) #converts numbers from base 256 to base 10 numbers
 
         return two_byte_set
 
-    def dezimal_to_base(two_byte_set):
+    def decimal_to_base(two_byte_set):
         base_list = []
         for decimal in two_byte_set:
             representation_array = []
