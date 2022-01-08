@@ -1,5 +1,5 @@
 import numpy as np
-
+from math import gcd 
 
 class Reed_Solomon() :
 
@@ -15,7 +15,7 @@ class Reed_Solomon() :
     def encode(self, message):
         if len(message) != self.payload_length:
             raise "message has not the right length"
-            
+
         message = np.polynomial.polynomial.Polynomial(message)
         parity = ([0] * (self.two_s +1))
         parity[self.two_s] = 1
@@ -25,9 +25,8 @@ class Reed_Solomon() :
 
         # obtain parity elements to add to message
         # thus message becomes divisible by generator
-        r = np.polynomial.polynomial.polydiv(new_message.coef,self.generator_polynominal.coef)[1] % self.field_size
-        r = np.array([(a -self.field_size) * -1 if a != 0 else a for a in r ])
-        r = np.polynomial.polynomial.Polynomial(r)
+        r = self.poly_division_in_field(new_message,self.generator_polynominal)
+        r = np.polynomial.polynomial.Polynomial(np.array([(a -self.field_size) * -1 if a != 0 else a for a in r ]))
 
         # add polynominals together
         message_out = new_message + r
@@ -41,8 +40,21 @@ class Reed_Solomon() :
         pass
 
     def return_generator_polynominal(self):
-        pass
+        primitive_element = self.find_primitive_element()
+        output_poly = np.polynomial.polynomial.Polynomial(np.array([-primitive_element,1]))
+        for i in range(2,self.two_s +1):
+            output_poly *= np.polynomial.polynomial.Polynomial(np.array([-primitive_element**i,1]))
+        return output_poly
 
     
-    def find_primitive_element():
-        pass
+    def find_primitive_element(self):
+        required_set = {num for num in range(1, self.field_size) if gcd(num, self.field_size) }
+        # wäre mehr effizient hier nicht alle elemente zu suchen 
+        all_primitives = [g for g in range(1, self.field_size) if required_set == {pow(g, powers, self.field_size) for powers in range(1, self.field_size)}]
+        if len(all_primitives) == 0:
+            raise "No primitive elements found"
+        return all_primitives[0]
+    
+    def poly_division_in_field(self,poly1,poly2):
+        return np.polynomial.polynomial.polydiv(poly1.coef,poly2.coef)[1] % self.field_size
+         
