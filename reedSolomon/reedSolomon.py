@@ -8,6 +8,7 @@ class Reed_Solomon() :
         self.message_length = message_length
         self.payload_length = payload_length
         self.two_s = message_length - payload_length
+        self.primitive_element = self.find_primitive_element()
         self.generator_polynominal = self.return_generator_polynominal()
         
     # params message : np.array of length payload_length
@@ -37,19 +38,36 @@ class Reed_Solomon() :
     # params message : np.array of length message_length
     # output np.array of length payload_length
     def decode(self, recieved_message):
-        # check if message divides by generator if yes no error -> return message
-        if np.array_equal((recieved_message % self.generator_polynominal).coef % self.field_size, np.zeros(self.two_s)):
+        msg = np.polynomial.polynomial.Polynomial(recieved_message)
+        # check if message divides by generator if yes no error -> return message indexed at values of k
+        if np.array_equal((msg % self.generator_polynominal).coef % self.field_size, np.zeros(self.two_s)):
             return recieved_message[self.two_s:self.message_length]
+        # error detected
         else:
-            # error detected obtain syndome -> msg 
-            syndrome = (recieved_message % self.generator_polynominal).coef % self.field_size
+            # Steps : calc syndrome -> error polynominal(berlekamp) -> error locations(chien search) -> error magnitude(forney algo) -> error corrector
+            # get syndrome
+            syndrome = self.calc_syndrome(msg)
+            # get error polynominal
+            error_polynominal = self.calc_error_polynominal(syndrome)
+            print(error_polynominal)
             
 
+    def calc_syndrome(self,message_ploynominal):
+        syndrome = []
+        # evaluate message polynominal 2s times with primitive element by raising element to power 0 < i < 2s x**i
+        for i in range(1,self.two_s+1):
+            syndrome.append(message_ploynominal((self.primitive_element**i)%self.field_size) % self.field_size)
+        return np.array(syndrome)
+
+    # uses berlekamp massey algorithm due to better execution time
+    def calc_error_polynominal(self, syndrome):
+       pass
+         
+
     def return_generator_polynominal(self):
-        primitive_element = self.find_primitive_element()
-        output_poly = np.polynomial.polynomial.Polynomial(np.array([-primitive_element,1]))
+        output_poly = np.polynomial.polynomial.Polynomial(np.array([-self.primitive_element,1]))
         for i in range(2,self.two_s +1):
-            output_poly *= np.polynomial.polynomial.Polynomial(np.array([-primitive_element**i,1]))
+            output_poly *= np.polynomial.polynomial.Polynomial(np.array([-self.primitive_element**i,1]))
         return output_poly
 
     
