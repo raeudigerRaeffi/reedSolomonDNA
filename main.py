@@ -36,6 +36,8 @@ if __name__ == '__main__':
     msg = np.array([3,0,0,0,0,1])
     encode_msg = inner_encoder.encode(msg)
     encode_msg[5] = 9
+    encode_msg[2] = 9
+ 
     print(encode_msg)
     #print(inner_encoder.decode(encode_msg))
     print(inner_encoder.decode(encode_msg) == msg)

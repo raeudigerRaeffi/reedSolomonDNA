@@ -49,7 +49,10 @@ class Reed_Solomon() :
             syndrome = self.calc_syndrome(msg)
             # get error polynominal
             error_polynominal = self.calc_error_polynominal(syndrome)
-            print(syndrome)
+            # get error locations
+            error_locations = self.calc_error_locations(error_polynominal)
+            print("error polynomina",error_polynominal)
+            print("error locations",error_locations)
             
 
     def calc_syndrome(self,message_ploynominal):
@@ -72,6 +75,7 @@ class Reed_Solomon() :
         discrepancy_l = 1
         while i < n:
             syndrome_values = syndrome[i-L:i]
+            # flips syndrome values due to s_(k-i) * omega_k requirement
             discrepancy_current = (syndrome[i] + np.dot(error_loc[0:L],syndrome_values[::-1])) % self.field_size
             if discrepancy_current != 0:
                 temp_copy = np.copy(error_loc)
@@ -89,6 +93,16 @@ class Reed_Solomon() :
             i = i + 1
         return error_loc
 
+    # uses chien search algorithm
+    def calc_error_locations(self, error_polynominal):
+        error_locations = []
+        polynominal_to_evaluate = np.polynomial.polynomial.Polynomial(error_polynominal)
+        # evaluate polynominal for all elements of GF(p) if error polynominal is 0 location is found
+        for i in range(0,self.field_size):
+            y = polynominal_to_evaluate(i) % self.field_size
+            if y == 0:
+                error_locations.append(i)
+        return error_locations
          
 
     def return_generator_polynominal(self):
