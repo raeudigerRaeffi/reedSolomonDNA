@@ -49,19 +49,46 @@ class Reed_Solomon() :
             syndrome = self.calc_syndrome(msg)
             # get error polynominal
             error_polynominal = self.calc_error_polynominal(syndrome)
-            print(error_polynominal)
+            print(syndrome)
             
 
     def calc_syndrome(self,message_ploynominal):
         syndrome = []
         # evaluate message polynominal 2s times with primitive element by raising element to power 0 < i < 2s x**i
-        for i in range(1,self.two_s+1):
+        for i in range(0,self.two_s):
             syndrome.append(message_ploynominal((self.primitive_element**i)%self.field_size) % self.field_size)
         return np.array(syndrome)
 
     # uses berlekamp massey algorithm due to better execution time
     def calc_error_polynominal(self, syndrome):
-       pass
+        i = 0
+        n = len(syndrome)
+        error_loc = np.zeros(n)
+        error_loc[0] = 1
+        L = 0
+        error_l = np.zeros(n)
+        error_l[0] = 1
+        l = -1
+        discrepancy_l = 1
+        while i < n:
+            syndrome_values = syndrome[i-L:i]
+            discrepancy_current = (syndrome[i] + np.dot(error_loc[0:L],syndrome_values[::-1])) % self.field_size
+            if discrepancy_current != 0:
+                temp_copy = np.copy(error_loc)
+                p = np.zeros(n)
+                for j in range(0, l):
+                    if error_l[j] != 0:
+                        p[j + i - l] = error_l[j]
+                error_loc = (error_loc + p) % self.field_size
+
+                if (2 * L) <= i:
+                    l = i
+                    error_l = temp_copy
+                    discrepancy_l = discrepancy_current
+                    L = i + 1 - L
+            i = i + 1
+        return error_loc
+
          
 
     def return_generator_polynominal(self):
