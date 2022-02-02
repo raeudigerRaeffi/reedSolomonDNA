@@ -31,16 +31,19 @@ if __name__ == '__main__':
 
     two_byte_set = nsc.two_byte_conversion(data_string)
     base_list = nsc.decimal_to_base(two_byte_set)
-    inner_encoder = reedSolomon.Reed_Solomon(11,10,6)
+    inner_encoder = reedSolomon.Reed_Solomon(2,255,223,8)
     #inner_encoder.generator_polynominal = np.polynomial.polynomial.Polynomial([1,8,5,3,1])
-    msg = np.array([3,0,0,0,0,1])
+    #msg = np.array([3,0,0,0,0,1])
+    msg = np.random.randint(0,2,size=(223,))
     encode_msg = inner_encoder.encode(msg)
-    encode_msg[5] = 9
-    encode_msg[2] = 9
- 
-    print(encode_msg)
+    
+    print("message bit to be replaces", encode_msg[7])
+    #encode_msg[7] = 0
+    #encode_msg[7] = 9
+    #print(encode_msg)
+     
     #print(inner_encoder.decode(encode_msg))
-    print(inner_encoder.decode(encode_msg) == msg)
+    #print(inner_encoder.decode(encode_msg) == msg)
     #print(base_list)
 
     # Performance counter

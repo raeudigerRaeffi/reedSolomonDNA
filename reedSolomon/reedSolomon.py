@@ -1,46 +1,56 @@
+ 
 import numpy as np
+import galois as gl
 from math import gcd 
 
 class Reed_Solomon() :
 
-    def __init__(self, field_size:int, message_length:int, payload_length:int) -> None:
+    def __init__(self, field_size:int, message_length:int, payload_length:int,symbol_size:int) -> None:
         self.field_size = field_size
+        self.galois_field = gl.GF(field_size**symbol_size)
         self.message_length = message_length
         self.payload_length = payload_length
         self.two_s = message_length - payload_length
         self.primitive_element = self.find_primitive_element()
         self.generator_polynominal = self.return_generator_polynominal()
+        self.gen_roots = self.generator_polynominal.roots()
         
     # params message : np.array of length payload_length
     # output np.array of length message_length
     def encode(self, message):
         if len(message) != self.payload_length:
-            raise "message has not the right length"
-
-        message = np.polynomial.polynomial.Polynomial(message)
+            print(len(message))
+            raise  "message has not the right length"
+        
+        message = self.create_poly(message)
+        
         parity = ([0] * (self.two_s +1))
         parity[self.two_s] = 1
-        parity = np.polynomial.polynomial.Polynomial(parity)
+        parity = self.create_poly(parity)
+        print(message)
+        print(parity)
         # message times x**2s
-        new_message = np.polymul(parity,message)[0]
-
+        new_message = parity * message
+        print(new_message)
         # obtain parity elements to add to message
         # thus message becomes divisible by generator
-        r = self.poly_division_in_field(new_message,self.generator_polynominal)
-        r = np.polynomial.polynomial.Polynomial(np.array([(a -self.field_size) * -1 if a != 0 else a for a in r ]))
-
+        
+        r = new_message % self.generator_polynominal
+        print("r",r)
         # add polynominals together
-        message_out = new_message + r
-
+        message_out = new_message - r
+        print("msg out",message_out)
         # send coefficents out
-        return message_out.coef
+        return message_out.coeffs[::-1]
     
     # params message : np.array of length message_length
     # output np.array of length payload_length
     def decode(self, recieved_message):
-        msg = np.polynomial.polynomial.Polynomial(recieved_message)
+        msg = self.create_poly(recieved_message)
+        print(msg)
         # check if message divides by generator if yes no error -> return message indexed at values of k
-        if np.array_equal((msg % self.generator_polynominal).coef % self.field_size, np.zeros(self.two_s)):
+        if (msg % self.generator_polynominal) ==self.create_poly([0]):
+             
             return recieved_message[self.two_s:self.message_length]
         # error detected
         else:
@@ -48,9 +58,16 @@ class Reed_Solomon() :
             # get syndrome
             syndrome = self.calc_syndrome(msg)
             # get error polynominal
-            error_polynominal = self.calc_error_polynominal(syndrome)
-            # get error locations
-            error_locations = self.calc_error_locations(error_polynominal)
+            #error_polynominal = self.calc_error_polynominal(syndrome)
+            error_polynominal = gl.berlekamp_massey(self.galois_field(syndrome[::-1]))
+
+            error_locations = error_polynominal.roots()
+       
+            #find inverse of locations
+
+            # get error location
+            # error_locations = self.calc_error_locations(error_polynominal) 
+            print("error syndrome",syndrome )
             print("error polynomina",error_polynominal)
             print("error locations",error_locations)
             
@@ -58,9 +75,12 @@ class Reed_Solomon() :
     def calc_syndrome(self,message_ploynominal):
         syndrome = []
         # evaluate message polynominal 2s times with primitive element by raising element to power 0 < i < 2s x**i
+        print("primitive el",self.primitive_element)
         for i in range(0,self.two_s):
-            syndrome.append(message_ploynominal((self.primitive_element**i)%self.field_size) % self.field_size)
-        return np.array(syndrome)
+            syndrome.append(message_ploynominal(self.primitive_element**i))
+        #for i in self.gen_roots: # replace with gen roots
+        #    syndrome.append(message_ploynominal(i))
+        return syndrome 
 
     # uses berlekamp massey algorithm due to better execution time
     def calc_error_polynominal(self, syndrome):
@@ -106,20 +126,22 @@ class Reed_Solomon() :
          
 
     def return_generator_polynominal(self):
-        output_poly = np.polynomial.polynomial.Polynomial(np.array([-self.primitive_element,1]))
-        for i in range(2,self.two_s +1):
-            output_poly *= np.polynomial.polynomial.Polynomial(np.array([-self.primitive_element**i,1]))
+        
+        output_poly = self.create_poly([-self.primitive_element**0,1])
+        for i in range(1,self.two_s):
+            output_poly *= self.create_poly([-self.primitive_element**i ,1])
+         
         return output_poly
 
     
     def find_primitive_element(self):
-        required_set = {num for num in range(1, self.field_size) if gcd(num, self.field_size) }
-        # wäre mehr effizient hier nicht alle elemente zu suchen 
-        all_primitives = [g for g in range(1, self.field_size) if required_set == {pow(g, powers, self.field_size) for powers in range(1, self.field_size)}]
-        if len(all_primitives) == 0:
-            raise "No primitive elements found"
-        return all_primitives[0]
     
-    def poly_division_in_field(self,poly1,poly2):
-        return np.polynomial.polynomial.polydiv(poly1.coef,poly2.coef)[1] % self.field_size
+        return self.galois_field.primitive_elements[0]
+         
+
+    def create_poly(self,data):
+        return  gl.Poly(data[::-1],self.galois_field)
+    
+    def find_inverse(self,number):
+        return self.galois_field(1) / number
          
