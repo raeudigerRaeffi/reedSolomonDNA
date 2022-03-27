@@ -38,11 +38,11 @@ if __name__ == '__main__':
     encode_msg = inner_encoder.encode(msg)
     
     print("message bit to be replaces", encode_msg[7])
-    #encode_msg[7] = 0
-    #encode_msg[7] = 9
+    encode_msg[7] = 0
+    encode_msg[7] = 9
     #print(encode_msg)
      
-    #print(inner_encoder.decode(encode_msg))
+    print(inner_encoder.decode(encode_msg))
     #print(inner_encoder.decode(encode_msg) == msg)
     #print(base_list)
 

@@ -21,62 +21,71 @@ class Reed_Solomon() :
         if len(message) != self.payload_length:
             print(len(message))
             raise  "message has not the right length"
-        
+        #n-1 n = länge deiner nachricht nachrichtpolynomon von n-1ten grad 2x^2 +4x +1
+        # c =  m * x^2s s = Anzahl der Fehler die zu korregieren sind
+        # c %gen
         message = self.create_poly(message)
         
         parity = ([0] * (self.two_s +1))
         parity[self.two_s] = 1
         parity = self.create_poly(parity)
-        print(message)
-        print(parity)
+        #print(message)
+        print("parity",parity)
         # message times x**2s
         new_message = parity * message
-        print(new_message)
+        #print(new_message)
         # obtain parity elements to add to message
         # thus message becomes divisible by generator
         
         r = new_message % self.generator_polynominal
-        print("r",r)
+        
+        #print("r",r)
         # add polynominals together
         message_out = new_message - r
-        print("msg out",message_out)
+        #print("msg out",message_out)
         # send coefficents out
         return message_out.coeffs[::-1]
     
     # params message : np.array of length message_length
     # output np.array of length payload_length
     def decode(self, recieved_message):
+        print("len gen roots",len(self.gen_roots))
         msg = self.create_poly(recieved_message)
-        print(msg)
+        print(msg) 
         # check if message divides by generator if yes no error -> return message indexed at values of k
         if (msg % self.generator_polynominal) ==self.create_poly([0]):
              
             return recieved_message[self.two_s:self.message_length]
         # error detected
         else:
+            # steps erasure calculations performen -> dft
             # Steps : calc syndrome -> error polynominal(berlekamp) -> error locations(chien search) -> error magnitude(forney algo) -> error corrector
-            # get syndrome
+            # get syndrome 
             syndrome = self.calc_syndrome(msg)
+            #syndrome = msg % self.generator_polynominal
             # get error polynominal
-            #error_polynominal = self.calc_error_polynominal(syndrome)
+            print(syndrome)
+            #error_polynominal = gl.berlekamp_massey(syndrome.coeffs[::-1])
+            
             error_polynominal = gl.berlekamp_massey(self.galois_field(syndrome[::-1]))
 
             error_locations = error_polynominal.roots()
-       
+            print("inverse of loc",self.galois_field(1)/self.galois_field(149))
             #find inverse of locations
 
             # get error location
             # error_locations = self.calc_error_locations(error_polynominal) 
-            print("error syndrome",syndrome )
-            print("error polynomina",error_polynominal)
-            print("error locations",error_locations)
+            #print("error syndrome",syndrome )
+            #print("error polynomina",error_polynominal)
+            with self.galois_field.display("power"):
+                print("error locations",error_locations)
             
 
     def calc_syndrome(self,message_ploynominal):
         syndrome = []
         # evaluate message polynominal 2s times with primitive element by raising element to power 0 < i < 2s x**i
-        print("primitive el",self.primitive_element)
-        for i in range(0,self.two_s):
+        for i in range(1,self.two_s+1):
+            print("poer to eval syndrom",i)
             syndrome.append(message_ploynominal(self.primitive_element**i))
         #for i in self.gen_roots: # replace with gen roots
         #    syndrome.append(message_ploynominal(i))
@@ -128,7 +137,7 @@ class Reed_Solomon() :
     def return_generator_polynominal(self):
         
         output_poly = self.create_poly([-self.primitive_element**0,1])
-        for i in range(1,self.two_s):
+        for i in range(1,self.two_s): 
             output_poly *= self.create_poly([-self.primitive_element**i ,1])
          
         return output_poly
