@@ -35,7 +35,7 @@ if __name__ == '__main__':
     #inner_encoder.generator_polynominal = np.polynomial.polynomial.Polynomial([1,8,5,3,1])
     #msg = np.array([3,0,0,0,0,1])
     msg = np.random.randint(0,2,size=(223,))
-    encode_msg = inner_encoder.encode(msg)
+    encode_msg = inner_encoder.systematic_encoding(msg)
     
     print("message bit to be replaces", encode_msg[7])
     encode_msg[7] = 0

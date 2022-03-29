@@ -5,6 +5,12 @@ from math import gcd
 
 class Reed_Solomon() :
 
+    # Inner Code
+    # shorten code with 0 appended and systematic encoding
+
+    #Outercode
+    #Encoding with discrete foruier tranform
+
     def __init__(self, field_size:int, message_length:int, payload_length:int,symbol_size:int) -> None:
         self.field_size = field_size
         self.galois_field = gl.GF(field_size**symbol_size)
@@ -17,7 +23,7 @@ class Reed_Solomon() :
         
     # params message : np.array of length payload_length
     # output np.array of length message_length
-    def encode(self, message):
+    def systematic_encoding(self, message):
         if len(message) != self.payload_length:
             print(len(message))
             raise  "message has not the right length"
@@ -46,6 +52,14 @@ class Reed_Solomon() :
         # send coefficents out
         return message_out.coeffs[::-1]
     
+
+    def encoding(self,message):
+        #input column zu gf element
+        #output n - k entries from start 0 remaining k = input
+        # idfgt auf output und return
+
+
+
     # params message : np.array of length message_length
     # output np.array of length payload_length
     def decode(self, recieved_message):
@@ -70,13 +84,9 @@ class Reed_Solomon() :
             error_polynominal = gl.berlekamp_massey(self.galois_field(syndrome[::-1]))
 
             error_locations = error_polynominal.roots()
-            print("inverse of loc",self.galois_field(1)/self.galois_field(149))
             #find inverse of locations
 
             # get error location
-            # error_locations = self.calc_error_locations(error_polynominal) 
-            #print("error syndrome",syndrome )
-            #print("error polynomina",error_polynominal)
             with self.galois_field.display("power"):
                 print("error locations",error_locations)
             
@@ -153,4 +163,10 @@ class Reed_Solomon() :
     
     def find_inverse(self,number):
         return self.galois_field(1) / number
+    
+    def convert_to_symbol_array(matrix):
+        output = []
+        for i in range(0,matrix.shape[1]):
+            output.append(int(gl.Poly(matrix[:,i],field=self.galois_field)))
+        return np.array(output)
          
