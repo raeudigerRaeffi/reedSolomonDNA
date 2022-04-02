@@ -1,9 +1,11 @@
- 
 import numpy as np
 import galois as gl
 from math import gcd 
+from .basereedsolomon import Base_Reed_Solomon
 
-class Reed_Solomon() :
+
+
+class Reed_Solomon(Base_Reed_Solomon) :
 
     # Inner Code
     # shorten code with 0 appended and systematic encoding
@@ -12,15 +14,14 @@ class Reed_Solomon() :
     #Encoding with discrete foruier tranform
 
     def __init__(self, field_size:int, message_length:int, payload_length:int,symbol_size:int) -> None:
-        self.field_size = field_size
-        self.galois_field = gl.GF(field_size**symbol_size)
-        self.message_length = message_length
-        self.payload_length = payload_length
-        self.two_s = message_length - payload_length
-        self.primitive_element = self.find_primitive_element()
+        super().__init__(field_size,message_length,payload_length,symbol_size)
+        self.primitive_element = self.galois_field.primitive_element
         self.generator_polynominal = self.return_generator_polynominal()
         self.gen_roots = self.generator_polynominal.roots()
-        
+    
+
+
+
     # params message : np.array of length payload_length
     # output np.array of length message_length
     def systematic_encoding(self, message):
@@ -35,8 +36,8 @@ class Reed_Solomon() :
         parity = ([0] * (self.two_s +1))
         parity[self.two_s] = 1
         parity = self.create_poly(parity)
-        #print(message)
-        print("parity",parity)
+       
+
         # message times x**2s
         new_message = parity * message
         #print(new_message)
@@ -57,12 +58,16 @@ class Reed_Solomon() :
         #input column zu gf element
         #output n - k entries from start 0 remaining k = input
         # idfgt auf output und return
+        if len(message) % self.p != 0:
+            raise ValueError("length of message needs to be dvisible by p")
+        
+        message_matrix = self.input_arr_to_matrix(message)
 
 
 
     # params message : np.array of length message_length
     # output np.array of length payload_length
-    def decode(self, recieved_message):
+    def systematic_decode(self, recieved_message):
         print("len gen roots",len(self.gen_roots))
         msg = self.create_poly(recieved_message)
         print(msg) 
@@ -78,7 +83,7 @@ class Reed_Solomon() :
             syndrome = self.calc_syndrome(msg)
             #syndrome = msg % self.generator_polynominal
             # get error polynominal
-            print(syndrome)
+            #print(syndrome)
             #error_polynominal = gl.berlekamp_massey(syndrome.coeffs[::-1])
             
             error_polynominal = gl.berlekamp_massey(self.galois_field(syndrome[::-1]))
@@ -94,8 +99,8 @@ class Reed_Solomon() :
     def calc_syndrome(self,message_ploynominal):
         syndrome = []
         # evaluate message polynominal 2s times with primitive element by raising element to power 0 < i < 2s x**i
-        for i in range(1,self.two_s+1):
-            print("poer to eval syndrom",i)
+        for i in range(1,self.two_s):
+    
             syndrome.append(message_ploynominal(self.primitive_element**i))
         #for i in self.gen_roots: # replace with gen roots
         #    syndrome.append(message_ploynominal(i))
@@ -152,11 +157,6 @@ class Reed_Solomon() :
          
         return output_poly
 
-    
-    def find_primitive_element(self):
-    
-        return self.galois_field.primitive_elements[0]
-         
 
     def create_poly(self,data):
         return  gl.Poly(data[::-1],self.galois_field)
@@ -164,9 +164,17 @@ class Reed_Solomon() :
     def find_inverse(self,number):
         return self.galois_field(1) / number
     
-    def convert_to_symbol_array(matrix):
+    def convert_to_symbol_array(self,matrix):
         output = []
         for i in range(0,matrix.shape[1]):
             output.append(int(gl.Poly(matrix[:,i],field=self.galois_field)))
         return np.array(output)
-         
+
+    
+
+
+
+
+
+
+    
