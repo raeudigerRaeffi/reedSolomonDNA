@@ -7,12 +7,6 @@ from .basereedsolomon import Base_Reed_Solomon
 
 class Reed_Solomon(Base_Reed_Solomon) :
 
-    # Inner Code
-    # shorten code with 0 appended and systematic encoding
-
-    #Outercode
-    #Encoding with discrete foruier tranform
-
     def __init__(self, field_size:int, message_length:int, payload_length:int,symbol_size:int) -> None:
         super().__init__(field_size,message_length,payload_length,symbol_size)
         self.primitive_element = self.galois_field.primitive_element
@@ -20,8 +14,7 @@ class Reed_Solomon(Base_Reed_Solomon) :
         self.gen_roots = self.generator_polynominal.roots()
     
 
-
-
+    
     # params message : np.array of length payload_length
     # output np.array of length message_length
     def systematic_encoding(self, message):
@@ -164,11 +157,7 @@ class Reed_Solomon(Base_Reed_Solomon) :
     def find_inverse(self,number):
         return self.galois_field(1) / number
     
-    def convert_to_symbol_array(self,matrix):
-        output = []
-        for i in range(0,matrix.shape[1]):
-            output.append(int(gl.Poly(matrix[:,i],field=self.galois_field)))
-        return np.array(output)
+
 
     
 

@@ -17,8 +17,14 @@ class Galois_Helper():
         
         return i
 
-    def get_nth_unity_root_of_field(self,n):
+    def find_multiplactive_inverse(self,element):
+        power_element = self.get_power_of_field_element(element)
         power_of_one = self.get_power_of_field_element(self.field(1))
+        print(power_of_one,power_element)
+        return self.field.primitive_element**(power_of_one -power_element )
+
+    def get_nth_unity_root_of_field(self,n):
+        power_of_one = (self.field.characteristic **self.field.degree)-1 #self.get_power_of_field_element(self.field(1))
         if power_of_one % n != 0:
             raise ValueError("failure in getting nth root") 
         return self.field.primitive_element**(power_of_one//n)
@@ -43,3 +49,35 @@ class Galois_Helper():
 
     def find_negative_element(self,el):
         return self.field((self.field.characteristic**self.field.degree)-1) -el
+    
+
+    ## currently not neededed
+    def modified_berlekamp_massey(self,number_of_steps,syndromes):
+        error_locator_poly = [gl.Poly([1],field=self.field)]
+        error_locator_support_poly = gl.Poly([1],field=self.field)
+        error_evaluator_poly = [gl.Poly([0],field=self.field)]
+        # x^-1 is ax where ax * x = 1
+        error_evaluator_support_poly = gl.Poly(self.find_multiplactive_inverse(self.field("a^1")).vector(),field=self.field)
+        L = 0
+        #print( gl.Poly([1]))
+        #print(gl.Poly([1,0]))
+        #print(error_evaluator_poly)
+        for k in range(0,number_of_steps):
+            discrepancy = gl.Poly([0],field=self.field)
+            for i in range(0,L+1):
+                # calculate discrepancy 
+                discrepancy = discrepancy +error_locator_poly[i] * gl.Poly([syndromes[k-i]],field=self.field)
+            # update error locator polys
+            error_locator_poly_new = error_locator_poly[k] + (self.find_negative_element(discrepancy) * error_locator_support_poly * gl.Poly([1,0],field=self.field))
+            error_evaluator_poly_new = error_evaluator_poly[k]-( discrepancy * error_evaluator_support_poly * gl.Poly([1,0],field=self.field))
+            error_evaluator_poly.append(error_evaluator_poly_new )
+            error_locator_poly.append(error_locator_poly_new )
+            
+            if discrepancy != gl.Poly([0],field=self.field) and 2*L <= k:
+                error_locator_support_poly = error_locator_poly[k]/discrepancy
+            print(error_locator_poly)
+            print(error_evaluator_poly)
+            print(error_locator_support_poly)
+            print(error_evaluator_support_poly * gl.Poly([1,0],field=self.field))
+            break
+        pass

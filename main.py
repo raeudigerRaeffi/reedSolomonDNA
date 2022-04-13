@@ -31,10 +31,24 @@ if __name__ == '__main__':
 
     two_byte_set = nsc.two_byte_conversion(data_string)
     base_list = nsc.decimal_to_base(two_byte_set)
-    inner_encoder = reedSolomon.Generalized_Reed_Solomon(2,15,9,4,3)
+    inner_encoder = reedSolomon.Generalized_Reed_Solomon(2,9,6,4,3)
     
-    print(inner_encoder.encode([11, 3, 2, 5, 6, 4, 10, 12, 8]))
-    #msg = np.random.randint(0,2,size=(9,))
+    msg = inner_encoder.encode([ 5, 6, 4, 10, 12, 8])
+    msg_org = np.copy(msg)
+    print("encoded msg",msg)
+    msg = msg[0:8]
+    #msg[7] = 11
+    #msg[12] = 6
+    print("tainted msg",msg)
+    dec_msg = inner_encoder.decode(msg)
+    print(dec_msg)
+    print(msg_org == dec_msg)
+    manual_irr_poly = [1, 13, 15, 22, 45, 19, 34, 10, 17, 5, 41, 21, 12, 3, 23, 17, 27, 8, 34, 32, 7, 40, 41, 1, 32, 26, 24, 32, 37, 5, 1]
+    paper_rs = reedSolomon.Generalized_Reed_Solomon(47,713,594,30,1,manual_irr_poly)
+    test_msg = np.random.random_integers(0,46,(30,594))
+    test_msg_transformed = paper_rs.convert_to_symbol_array(test_msg)
+    print(len(test_msg_transformed))
+    paper_rs.encode(test_msg_transformed)
     #encode_msg = inner_encoder.systematic_encoding(msg)
     
     #print("message bit to be replaces", encode_msg[7])
