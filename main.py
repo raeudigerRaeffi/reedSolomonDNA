@@ -36,11 +36,11 @@ if __name__ == '__main__':
     # 3- 2 = 1   12 -3- 2 = 7 3-1 = 2
     msg = inner_encoder.encode([ 5, 6, 4, 10,3])
     msg_org = np.copy(msg)
-    msg[2] = 11
+    msg[3] = 11
     dec_msg = inner_encoder.decode(msg)
     print("org",msg_org)
     print("dec",dec_msg)
-    print((msg_org == dec_msg).all())
+    print([ 5, 6, 4, 10,3] == dec_msg)
 
    
    

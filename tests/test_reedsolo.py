@@ -13,7 +13,7 @@ class ReedSoloTest(unittest.TestCase):
         normal_msg_org = np.copy(normal_msg)
         normal_msg[2] = 11
         dec_test_normal = test_normal_rs.decode(normal_msg)
-        self.assertTrue((normal_msg_org == dec_test_normal).all())
+        self.assertTrue([ 5, 6, 4, 10,3,5] == dec_test_normal)
 
     #Test case in which k is not divisble by p but r is
     def test_k_not_divisble_by_p(self):
@@ -23,7 +23,7 @@ class ReedSoloTest(unittest.TestCase):
         msg_org = np.copy(msg)
         msg[2] = 11
         dec_msg = inner_encoder.decode(msg)
-        self.assertTrue((msg_org == dec_msg).all())
+        self.assertTrue([ 5, 6, 4, 10,3] == dec_msg)
 
 if __name__ == '__main__':
     unittest.main()

@@ -73,14 +73,14 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
             recieved_msg = recieved_msg[0:self.payload_length] +([0]*self.num_of_padded_zeros) + recieved_msg[self.payload_length:len(recieved_msg)]
             corrected_msg = self.decode_classic(recieved_msg)
             corrected_msg = corrected_msg[0:self.payload_length_orignal] + corrected_msg[self.payload_length:len(corrected_msg)]
-            return corrected_msg
+            return self.return_info_symbols(corrected_msg)
 
         if self.d != 0:
             corrected_msg = self.decode_r_not_divisble(recieved_msg)
-            return corrected_msg
+            return self.return_info_symbols(corrected_msg)
         
         corrected_msg = self.decode_classic(recieved_msg)
-        return corrected_msg
+        return self.return_info_symbols(corrected_msg)
 
     def encode_classic(self,message):
         #TODO ass case for if k, r or n are not dovisible by p
@@ -124,6 +124,7 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         correction_msg = self.galois_field([0]*self.message_length)
         for index in range(0,len(error_locations_index)):
             correction_msg[error_locations_index[index]]  = error_magnitude[index]
+
         print("err",error_locations)
         return [ int(symbol) for symbol in (self.galois_field(recieved_msg) + correction_msg)]
     
@@ -239,6 +240,7 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
             a_i = self.primitive_element_adjusted(r)
             
             error_magnitudes.append(error_evaluator_poly(a_i**-1)/error_function_denominator(a_i**-1))
+        return error_magnitudes
         
     
     def modified_forney_r_not_divisble(self,error_location_poly,error_evaluator_poly,error_loc):
@@ -256,6 +258,9 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
 
     def get_original_msg_slice(self,msg):
         return msg[self.num_of_padded_zeros:self.message_length - self.d -1 ]
+
+    def return_info_symbols(self,msg):
+        return msg[0:self.payload_length_orignal]
 
     
     
