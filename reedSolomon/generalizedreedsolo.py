@@ -29,8 +29,11 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
             self.payload_length = self.payload_length + self.num_of_padded_zeros
             self.message_length = self.message_length + self.num_of_padded_zeros
 
+        #adjust parameters to handle r not divisble by p
         if self.d != 0:
-            pass
+            self.payload_length = self.payload_length_orignal + (self.p - self.c)
+            self.two_s = self.two_s + (self.p - self.d)
+            self.message_length = + self.payload_length + self.two_s
 
 
         for index in range(0,p_factor):
@@ -52,7 +55,15 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
             #remove conceptual zeros
             msg = msg[0:self.payload_length_orignal] + msg[self.payload_length:len(msg)]
             return msg
-        
+        if self.d != 0:
+            message = ([0]*self.num_of_padded_zeros) + message
+            print(message)
+            msg = self.encode_classic(message)
+            print("msg",msg)
+            msg = self.get_original_msg_slice(msg)
+            print("af",msg)
+            return msg 
+
         msg = self.encode_classic(message)            
         return msg
 
@@ -62,6 +73,10 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
             recieved_msg = recieved_msg[0:self.payload_length] +([0]*self.num_of_padded_zeros) + recieved_msg[self.payload_length:len(recieved_msg)]
             corrected_msg = self.decode_classic(recieved_msg)
             corrected_msg = corrected_msg[0:self.payload_length_orignal] + corrected_msg[self.payload_length:len(corrected_msg)]
+            return corrected_msg
+
+        if self.d != 0:
+            corrected_msg = self.decode_r_not_divisble(recieved_msg)
             return corrected_msg
         
         corrected_msg = self.decode_classic(recieved_msg)
@@ -112,6 +127,35 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         print("err",error_locations)
         return [ int(symbol) for symbol in (self.galois_field(recieved_msg) + correction_msg)]
     
+    # handles case in which r is not divisble by r
+    def decode_r_not_divisble(self,recieved_msg):
+        #construct new z message polynominal
+        z = [0] * self.message_length
+        print(self.galois_field(15) + self.galois_field(11))
+        for z_index in range(self.d  ,self.message_length - self.num_of_padded_zeros -1):
+            term_to_multiply = self.galois_field(1)
+            for j_index in range(0,self.p - self.d):
+                term_to_multiply = term_to_multiply * (self.primitive_element_adjusted(z_index) -self.p_unity**j_index)
+            
+            z[z_index] = int(term_to_multiply * self.galois_field(recieved_msg[::-1][z_index - self.num_of_padded_zeros]))
+
+        print("z",z)
+        syndromes = self.calc_syndrome(z)
+        galois_lfsr = gl.berlekamp_massey(self.galois_field(syndromes),"galois")
+        error_locator_polynominal = galois_lfsr.feedback_poly
+        error_evaluator_polynominal = gl.Poly(galois_lfsr.state,field =self.galois_field)
+
+        error_locations = self.modified_chien_search(error_locator_polynominal.coeffs[::-1])
+        print("err_loc",error_locations)
+        error_locations_index = [self.message_length- x-1 for x in error_locations] #need to be len(recived msg -1 - location)
+        error_magnitude = self.modified_forney_r_not_divisble(error_locator_polynominal,error_evaluator_polynominal,error_locations)
+        correction_msg = self.galois_field([0]*self.message_length)
+        for index in range(0,len(error_locations_index)):
+            correction_msg[error_locations_index[index]]  = error_magnitude[index]
+        
+        correction_msg = self.get_original_msg_slice(correction_msg)
+        print("corr",correction_msg)
+        return [ int(symbol) for symbol in (self.galois_field(recieved_msg) + correction_msg)]
 
     def primitive_element_adjusted(self,index):
         factor_unity = index % self.p
@@ -173,7 +217,7 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
             modified_a_values = []
             for a_index in range(0,self.p):
                 a_i = self.galois_field(0)
-                for j_ai_index in range(0,len(error_locator_poly) ): ## range v = len error_locator_poly
+                for j_ai_index in range(0,len(error_locator_poly)): ## range v = len error_locator_poly
                     if j_ai_index % self.p == a_index:
                         a_i = a_i + error_locator_poly[j_ai_index] * self.galois_field.primitive_element **-(j_ai_index*i)
                 modified_a_values.append(a_i)
@@ -190,11 +234,28 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
     def modified_forney(self,error_location_poly,error_evaluator_poly,error_loc):
         error_magnitudes = []
         error_function_denominator = error_location_poly.derivative() * gl.Poly([1,0],field=self.galois_field)
-
+        
         for r in error_loc:
             a_i = self.primitive_element_adjusted(r)
+            
             error_magnitudes.append(error_evaluator_poly(a_i**-1)/error_function_denominator(a_i**-1))
+        
+    
+    def modified_forney_r_not_divisble(self,error_location_poly,error_evaluator_poly,error_loc):
+        error_magnitudes = []
+        error_function_denominator = error_location_poly.derivative() * gl.Poly([1,0],field=self.galois_field)
+        
+        for r in error_loc:
+            term_to_multiply = self.galois_field(1)
+            a_i = self.primitive_element_adjusted(r)
+            for j_index in range(0,self.p - self.d):
+                term_to_multiply = term_to_multiply * (a_i -self.p_unity**j_index)
+            error_magnitiude = (-a_i) * term_to_multiply * (error_evaluator_poly(a_i**-1)/error_function_denominator(a_i**-1))
+            error_magnitudes.append(error_magnitiude)
         return error_magnitudes
+
+    def get_original_msg_slice(self,msg):
+        return msg[self.num_of_padded_zeros:self.message_length - self.d -1 ]
 
     
     

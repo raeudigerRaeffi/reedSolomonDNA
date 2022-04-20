@@ -32,7 +32,15 @@ if __name__ == '__main__':
     two_byte_set = nsc.two_byte_conversion(data_string)
     base_list = nsc.decimal_to_base(two_byte_set)
 
-    
+    inner_encoder = reedSolomon.Generalized_Reed_Solomon(2,12,5,4,3) #n 12 k 5 c 2 r 7 d 1 -> 5 + 9 - (3 -1)
+    # 3- 2 = 1   12 -3- 2 = 7 3-1 = 2
+    msg = inner_encoder.encode([ 5, 6, 4, 10,3])
+    msg_org = np.copy(msg)
+    msg[2] = 11
+    dec_msg = inner_encoder.decode(msg)
+    print("org",msg_org)
+    print("dec",dec_msg)
+    print((msg_org == dec_msg).all())
 
    
    
@@ -55,3 +63,10 @@ if __name__ == '__main__':
 
     # Performance counter
     print(str(time.perf_counter()/1000)+' s')
+
+
+    # n = k +r  k = information r = parity bits
+    # n / p -> k /p und r/p
+    # p = 23 713 
+    # k % p != 0 r %p = 0
+    # wähle p so dass r /p   n = 713,k = 594,r=119 und p = 17
