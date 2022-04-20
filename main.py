@@ -36,7 +36,8 @@ if __name__ == '__main__':
     # 3- 2 = 1   12 -3- 2 = 7 3-1 = 2
     msg = inner_encoder.encode([ 5, 6, 4, 10,3])
     msg_org = np.copy(msg)
-    msg[3] = 11
+    msg[1] = 11
+    print("tainted",msg)
     dec_msg = inner_encoder.decode(msg)
     print("org",msg_org)
     print("dec",dec_msg)

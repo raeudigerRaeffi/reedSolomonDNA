@@ -77,6 +77,7 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
 
         if self.d != 0:
             corrected_msg = self.decode_r_not_divisble(recieved_msg)
+            print("corre",corrected_msg)
             return self.return_info_symbols(corrected_msg)
         
         corrected_msg = self.decode_classic(recieved_msg)
@@ -111,7 +112,7 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
     def decode_classic(self, recieved_msg):
 
         syndromes = self.calc_syndrome(recieved_msg)
-
+        
         galois_lfsr = gl.berlekamp_massey(self.galois_field(syndromes),"galois")
         error_locator_polynominal = galois_lfsr.feedback_poly
         error_evaluator_polynominal = gl.Poly(galois_lfsr.state,field =self.galois_field)
@@ -132,13 +133,9 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
     def decode_r_not_divisble(self,recieved_msg):
         #construct new z message polynominal
         z = [0] * self.message_length
-        print(self.galois_field(15) + self.galois_field(11))
-        for z_index in range(self.d  ,self.message_length - self.num_of_padded_zeros -1):
-            term_to_multiply = self.galois_field(1)
-            for j_index in range(0,self.p - self.d):
-                term_to_multiply = term_to_multiply * (self.primitive_element_adjusted(z_index) -self.p_unity**j_index)
-            
-            z[z_index] = int(term_to_multiply * self.galois_field(recieved_msg[::-1][z_index - self.num_of_padded_zeros]))
+        print(self.galois_field(4) + self.galois_field(11))
+        for z_index in range(self.d  ,self.message_length - self.num_of_padded_zeros -1):        
+            z[z_index] = int(self.return_adjustment_delta(z_index) * self.galois_field(recieved_msg[z_index - self.num_of_padded_zeros]))
 
         print("z",z)
         syndromes = self.calc_syndrome(z)
@@ -248,11 +245,8 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         error_function_denominator = error_location_poly.derivative() * gl.Poly([1,0],field=self.galois_field)
         
         for r in error_loc:
-            term_to_multiply = self.galois_field(1)
             a_i = self.primitive_element_adjusted(r)
-            for j_index in range(0,self.p - self.d):
-                term_to_multiply = term_to_multiply * (a_i -self.p_unity**j_index)
-            error_magnitiude = (-a_i) * term_to_multiply * (error_evaluator_poly(a_i**-1)/error_function_denominator(a_i**-1))
+            error_magnitiude =  self.return_adjustment_delta(r) * (error_evaluator_poly(a_i**-1)/error_function_denominator(a_i**-1))
             error_magnitudes.append(error_magnitiude)
         return error_magnitudes
 
@@ -261,6 +255,14 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
 
     def return_info_symbols(self,msg):
         return msg[0:self.payload_length_orignal]
+    
+    #used for case in which r%p != p
+    def return_adjustment_delta(self,index):
+        term_to_multiply = self.galois_field(1)
+        a_i = self.primitive_element_adjusted(index)
+        for j_index in range(0,self.p - self.d):
+            term_to_multiply = term_to_multiply * (a_i -self.p_unity**j_index)
+        return term_to_multiply
 
     
     
