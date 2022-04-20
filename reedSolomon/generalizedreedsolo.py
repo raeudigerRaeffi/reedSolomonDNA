@@ -2,12 +2,12 @@ from dataclasses import field
 from msilib.schema import Error
 import numpy as np
 import galois as gl
-from .basereedsolomon import Base_Reed_Solomon
+from . import basereedsolomon
 
 
 
 
-class Generalized_Reed_Solomon(Base_Reed_Solomon):
+class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
 
     def __init__(self, field_size:int, message_length:int, payload_length:int,symbol_size:int,p_factor:int,irr_poly=None) -> None:
         super().__init__(field_size,message_length,payload_length,symbol_size,irr_poly)    
@@ -48,25 +48,23 @@ class Generalized_Reed_Solomon(Base_Reed_Solomon):
         if self.c != 0 and self.d == 0:
             # add conceptual zeros
             message = message +([0]*self.num_of_padded_zeros)
-        msg = self.encode_classic(message)
-        if self.c != 0 and self.d == 0:
+            msg = self.encode_classic(message)
             #remove conceptual zeros
             msg = msg[0:self.payload_length_orignal] + msg[self.payload_length:len(msg)]
-            
-
+            return msg
+        
+        msg = self.encode_classic(message)            
         return msg
 
     def decode(self, recieved_msg):
 
         if self.c != 0 and self.d == 0:
             recieved_msg = recieved_msg[0:self.payload_length] +([0]*self.num_of_padded_zeros) + recieved_msg[self.payload_length:len(recieved_msg)]
-            
+            corrected_msg = self.decode_classic(recieved_msg)
+            corrected_msg = corrected_msg[0:self.payload_length_orignal] + corrected_msg[self.payload_length:len(corrected_msg)]
+            return corrected_msg
         
         corrected_msg = self.decode_classic(recieved_msg)
-        
-        if self.c != 0 and self.d == 0:
-            corrected_msg = corrected_msg[0:self.payload_length_orignal] + corrected_msg[self.payload_length:len(corrected_msg)]
-            #corrected_msg = corrected_msg[0:len(corrected_msg)-self.num_of_padded_zeros ]
         return corrected_msg
 
     def encode_classic(self,message):

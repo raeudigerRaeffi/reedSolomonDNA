@@ -32,26 +32,10 @@ if __name__ == '__main__':
     two_byte_set = nsc.two_byte_conversion(data_string)
     base_list = nsc.decimal_to_base(two_byte_set)
 
-    inner_encoder = reedSolomon.Generalized_Reed_Solomon(2,11,5,4,3) #n 12 k 5 c 2 r 7 d 1 -> 5 + 9 - (3 -1)
-    # 3- 2 = 1   12 -3- 2 = 7 3-1 = 2
-    msg = inner_encoder.encode([ 5, 6, 4, 10,3])
-    msg_org = np.copy(msg)
-    print("encoded msg",msg)
     
-    msg[2] = 11
-    
-    print("tainted msg",msg)
-    dec_msg = inner_encoder.decode(msg)
-    print("dec",dec_msg)
-    #print("org",msg_org)
-    print("short k",(msg_org == dec_msg).all())
 
-    test_normal_rs = reedSolomon.Generalized_Reed_Solomon(2,12,6,4,3)
-    normal_msg = test_normal_rs.encode([ 5, 6, 4, 10,3,5])
-    normal_msg_org = np.copy(normal_msg)
-    normal_msg[2] = 11
-    dec_test_normal = test_normal_rs.decode(normal_msg)
-    print("normal",(normal_msg_org == dec_test_normal).all())
+   
+   
     #manual_irr_poly = [1, 13, 15, 22, 45, 19, 34, 10, 17, 5, 41, 21, 12, 3, 23, 17, 27, 8, 34, 32, 7, 40, 41, 1, 32, 26, 24, 32, 37, 5, 1]
     #paper_rs = reedSolomon.Generalized_Reed_Solomon(47,713,594,30,1,manual_irr_poly)
     #test_msg = np.random.random_integers(0,46,(30,594))
