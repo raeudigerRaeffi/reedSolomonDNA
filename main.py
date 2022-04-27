@@ -32,17 +32,22 @@ if __name__ == '__main__':
     two_byte_set = nsc.two_byte_conversion(data_string)
     base_list = nsc.decimal_to_base(two_byte_set)
 
-    inner_encoder = reedSolomon.Generalized_Reed_Solomon(2,12,5,4,3) #n 12 k 5 c 2 r 7 d 1 -> 5 + 9 - (3 -1)
+    inner_encoder = reedSolomon.Generalized_Reed_Solomon(2,12,9,4,3) #n 12 k 5 c 2 r 7 d 1 -> 5 + 9 - (3 -1)
     # 3- 2 = 1   12 -3- 2 = 7 3-1 = 2
-    msg = inner_encoder.encode([ 5, 6, 4, 10,3])
+    msg = inner_encoder.encode([ 5, 6, 4, 10,3,5,5,2,5])
     msg_org = np.copy(msg)
-    msg[1] = 11
+    msg[1] = 0
     print("tainted",msg)
     dec_msg = inner_encoder.decode(msg)
     print("org",msg_org)
     print("dec",dec_msg)
-    print([ 5, 6, 4, 10,3] == dec_msg)
+    print([ 5, 6, 4, 10,3,5,5,2,5] == dec_msg)
 
+    #test_normal_rs = reedSolomon.Generalized_Reed_Solomon(5,12,6,4,3)
+    #normal_msg = test_normal_rs.encode([ 5, 6, 4, 10,3,5])
+    #normal_msg[2] = 11
+    #dec_test_normal = test_normal_rs.decode(normal_msg)
+    #print("dec",dec_test_normal)
    
    
     #manual_irr_poly = [1, 13, 15, 22, 45, 19, 34, 10, 17, 5, 41, 21, 12, 3, 23, 17, 27, 8, 34, 32, 7, 40, 41, 1, 32, 26, 24, 32, 37, 5, 1]
@@ -71,3 +76,6 @@ if __name__ == '__main__':
     # p = 23 713 
     # k % p != 0 r %p = 0
     # wähle p so dass r /p   n = 713,k = 594,r=119 und p = 17
+
+    #veränderung von p führt zu fehler -> 
+    ##veränderung von field size führt zu fehler

@@ -7,7 +7,7 @@ class Base_Reed_Solomon():
         self.field_size = field_size
         if irr_poly ==None:
             try:
-                self.galois_field = gl.GF(field_size**symbol_size)
+                self.galois_field = gl.GF(field_size**symbol_size,display="power")#TODO remove power asap
             except LookupError:
                 print("need to find irreducible polynominal manually")
                 irreducible_polynominal = gl.irreducible_poly(field_size,symbol_size)

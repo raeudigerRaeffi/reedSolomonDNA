@@ -5,10 +5,12 @@ class Galois_Helper():
 
     def __init__(self,_field) -> None:
         self.field = _field
-
+        self.base_field = gl.Field(_field.characteristic)
+        #print("Basefield",self.base_field)
+        #print("Extendedfield",self.field)
 
     ## inefficent should be replaced once libary offers the functionality
-    def get_power_of_field_element(self,el):
+    def get_power_of_field_element(self,el): #TODO check if correct
         divider = self.field.primitive_element
         i = 1
         while int(el/divider) != 1:
@@ -44,10 +46,12 @@ class Galois_Helper():
         for i in range(0,p):
             p_factor =  -i*index
             array_p_multplier.append(pth_root**p_factor)
-    
-        return self.find_negative_element(self.field(1)/self.field(p)) * np.sum(self.field(array_p_multplier) * self.field(matrix),axis=1)
+        
+        factor = int(self.base_field(1)/ self.base_field(p % self.base_field.characteristic))
 
-    def find_negative_element(self,el):
+        return factor * np.sum(self.field(array_p_multplier) * self.field(matrix),axis=1)
+
+    def find_negative_element(self,el):#TODO check if correct
         return self.field((self.field.characteristic**self.field.degree)-1) -el
     
 
