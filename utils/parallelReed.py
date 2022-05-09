@@ -1,9 +1,10 @@
 import time
 import multiprocessing
+import sortBlock
 
 
 class parallelReed():
-    cores = 0  # TODO setze es auf einen standard wert, für den fall das es später nicht richtig geändert wird
+    cores = 8
     pool = None
     inner_encoder = None
     outer_encoder = None
@@ -16,91 +17,133 @@ class parallelReed():
         print(parallelReed.cores)
 
         # create Pool
-        parallelReed.pool = multiprocessing.Pool(
+        self.pool = multiprocessing.Pool(
             processes=(parallelReed.cores*4))
 
-    def f(input_num, pos, return_dict):
-        # TODO put here our function for decoding/encoding
-        # input is a vector to change, output is the changed vector
-        # pos and return_dict will stay the same, as well as our function to put it back together
-        # give the function also the encoding object, so we don'T need to process it each time from the beginning (means the galois field)
-        time.sleep(input_num % 3)
-        # todo index wont work correct, so put it in the return vector itself and sort it then
-        return_dict[pos] = [input_num*3, input_num*input_num, input_num*5]
+    def encode(input_vec, encoder, pos, return_dict):
+        output_vec = encoder.encode(input_vec)
+        return_dict[pos] = output_vec
 
-    # array hat arrays als spalten gespeichert [[][][]]
-    def encode(input_vec, inner, pos, return_dict):
-        output_vec = []
-        # encode input_vec using galoisField
-        if(inner):
-            for
+    def decode(input_vec, decoder, pos, return_dict):
+        output_vec = decoder.decode(input_vec)
+        return_dict[pos] = output_vec
+
+    # Input should be a list of arrays with array-size (713x39)
+    def startRsCode(self, inputList, codingType):
+        start_time = time.time()  # TODO remove the time
+        index = [0, 0, 0]
+
+        # create manager/dict for return values
+        manager = multiprocessing.Manager()
+        return_dict = manager.dict()
+
+        if(codingType == 0):
+            print("Encode")
+            for block in inputList:
+                # Convert Data to 1 dimensional arrays
+                for y in range(3, 34):  # outer encode dataStrings
+                    dataString = []
+
+                    for x in range(119, 713):
+                        dataString.append(block[x][y])
+
+                    self.pool.apply_async(func=parallelReed.encode, args=(
+                        dataString, self.outer_encoder, (y - 3), return_dict))
+
+                # stop the pool at the end
+                self.pool.close()
+                self.pool.join()
+
+                # write back the outer data
+                for y in range(3, (len(return_dict) + 3)):
+                    encodedData = return_dict.get((y - 3))
+                    for x in range(0, 119):  # 0-593 (message) => 594-712 (encoding data)
+                        block[x][y] = encodedData[(x + 594)]
+                return_dict.clear()
+
+                # add the index
+                for x in range(0, 713):
+                    for y in range(0, 3):
+                        block[x][y] = index[y]
+
+                    increaseIndex(index)
+
+                # encode inner data
+                for x in range(0, 713):
+                    self.pool.apply_async(func=parallelReed.encode, args=(
+                        block[x][0:32], self.inner_encoder, x, return_dict))
+
+                # stop the pool at the end
+                self.pool.close()
+                self.pool.join()
+
+                # write back the inner data
+                for x in range(0, len(return_dict)):
+                    encodedData = return_dict.get(x)
+                    for y in range(33, 39):  # 0-32 (message) => 33-38 (encoding data)
+                        block[x][y] = encodedData[y]
+                return_dict.clear()
         else:
-        return_dict[pos] = output_vec
+            print("Decode")
+            for block in inputList:
+                # encode inner data
+                for x in range(0, 713):
+                    self.pool.apply_async(func=parallelReed.decode, args=(
+                        block[x][0:38], self.inner_encoder, x, return_dict))
 
-    def decode(input_vec, inner, pos, return_dict):
-        output_vec = []
-        # decode input_vec using galoisField
-        return_dict[pos] = output_vec
+                # stop the pool at the end
+                self.pool.close()
+                self.pool.join()
 
-    def startEncode(inputList):  # Input should be a list of arrays with arrays (594x30)
-        start_time = time.time()  # start time
+                # write back the inner data
+                for x in range(0, len(return_dict)):
+                    decodedData = return_dict.get(x)
+                    for y in range(0, 33):
+                        block[x][y] = decodedData[y]
+                return_dict.clear()
 
-        # create manager/dict for return values
-        manager = multiprocessing.Manager()
-        return_dict = manager.dict()
+                # sort data with index
+                sort = sortBlock()
+                sort.sortBubble(block)
 
-        # start all new processes
-        i = 0
-        for block in inputList:
-            parallelReed.pool.apply_async(
-                func=parallelReed.encode, args=(block, i, return_dict))
+                # Convert Data to 1 dimensional arrays (should be sortet by now after index)
+                for y in range(3, 33):  # outer decode dataStrings
+                    dataString = []
 
-        # stop the pool at the end
-        parallelReed.pool.close()
-        parallelReed.pool.join()
+                    for x in range(0, 713):
+                        dataString.append(block[x][y])
 
-        result = []
+                    self.pool.apply_async(func=parallelReed.decode, args=(
+                        dataString, self.outer_encoder, (y - 3), return_dict))
 
-        for i in range(len(return_dict)):
-            result.append(return_dict.get(i))
+                # stop the pool at the end
+                self.pool.close()
+                self.pool.join()
 
-        print(result)
+                # write back the outer data
+                for y in range(3, (len(return_dict) + 3)):
+                    encodedData = return_dict.get((y - 3))
+                    for x in range(119, 713):
+                        block[x][y] = encodedData[(x - 119)]
+                return_dict.clear()
 
-        print("--- %s seconds ---" % (time.time() - start_time))
+        print("--- %s seconds ---" %
+              (time.time() - start_time))  # TODO remove the time
 
-        # TODO result will be there as a list of arrays in arrays, needs to be convertet to string again
+        return inputList  # TODO test without return
 
-    # Input should be a list of arrays with arrays (713x39)
-    def startRsCode(inputList, codeType, inner):
-        start_time = time.time()  # start time
 
-        # create manager/dict for return values
-        manager = multiprocessing.Manager()
-        return_dict = manager.dict()
-
-        # start all new processes
-        i = 0
-        for block in inputList:
-            if(codeType):  # encoding
-                parallelReed.pool.apply_async(func=parallelReed.encode, args=(
-                    block, inner, i, return_dict))
-            else:  # decoding
-                parallelReed.pool.apply_async(func=parallelReed.decode, args=(
-                    block, inner, i, return_dict))
-
-        # stop the pool at the end
-        parallelReed.pool.close()
-        parallelReed.pool.join()
-
-        result = []
-
-        print(len(return_dict))
-
-        for i in range(len(return_dict)):
-            result.append(return_dict.get(i))
-
-        print(result)
-
-        print("--- %s seconds ---" % (time.time() - start_time))
-
-        # TODO result will be there as a list of arrays in arrays, needs to be convertet to string again
+def increaseIndex(index):
+    index[2] += 1
+    if(index[2] >= 47):
+        index[2] = 0
+        index[1] += 1
+        if(index[1] >= 47):
+            index[1] = 0
+            index[0] += 1
+            if(index[0] >= 47):
+                index[2] = 0
+                index[1] = 0
+                index[0] = 0
+                # TODO find solution to this?
+                print("Index was to big, got resettet.")

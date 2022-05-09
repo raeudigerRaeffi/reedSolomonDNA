@@ -34,7 +34,12 @@ if __name__ == '__main__':
 
     inner_encoder = reedSolomon.Generalized_Reed_Solomon(2,12,5,4,3) #n 12 k 5 c 2 r 7 d 1 -> 5 + 9 - (3 -1)
     # 3- 2 = 1   12 -3- 2 = 7 3-1 = 2
+    print("inner encoder rdy")
     msg = inner_encoder.encode([ 5, 6, 4, 10,3])
+    print("message", msg)
+    dec_msg = inner_encoder.decode(msg)
+    print("message", dec_msg)
+    '''
     msg_org = np.copy(msg)
     msg[1] = 11
     print("tainted",msg)
@@ -42,6 +47,7 @@ if __name__ == '__main__':
     print("org",msg_org)
     print("dec",dec_msg)
     print([ 5, 6, 4, 10,3] == dec_msg)
+    '''
 
    
    
