@@ -81,6 +81,7 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
             return self.return_info_symbols(corrected_msg)
         
         corrected_msg = self.decode_classic(recieved_msg)
+        print("dec internal",corrected_msg)
         return self.return_info_symbols(corrected_msg)
 
     def encode_classic(self,message):
@@ -247,7 +248,9 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         for r in error_loc:
             a_i = self.primitive_element_adjusted(r)
             error_magnitiude =  self.return_adjustment_delta(r) * (error_evaluator_poly(a_i**-1)/error_function_denominator(a_i**-1))
-            error_magnitudes.append(error_magnitiude)
+            #print(r,a_i,self.return_adjustment_delta(r),error_evaluator_poly(a_i**-1)/error_function_denominator(a_i**-1))
+            error_magnitudes.append(-a_i * error_magnitiude)
+
         return error_magnitudes
 
     def get_original_msg_slice(self,msg):
@@ -259,10 +262,16 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
     #used for case in which r%p != p
     def return_adjustment_delta(self,index):
         term_to_multiply = self.galois_field(1)
+        
         a_i = self.primitive_element_adjusted(index)
         for j_index in range(0,self.p - self.d):
+            #print("t",index,"j:",j_index,term_to_multiply,(a_i -self.p_unity**j_index))
             term_to_multiply = term_to_multiply * (a_i -self.p_unity**j_index)
+        #print(a_i,term_to_multiply)
         return term_to_multiply
+
+    def test_adjustment(self,index):
+        pass
 
     
     
