@@ -56,13 +56,10 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
             raise("Length not as specified")
         print(message)
 
-        if self.c != 0 and self.d == 0:
+        if self.c != 0 :
             # add conceptual zeros
             message = message +([0]*self.num_of_padded_zeros)
-            msg = self.encode_classic(message)
-            #remove conceptual zeros
-            msg = msg[0:self.payload_length] + msg[self.payload_length + self.num_of_padded_zeros:len(msg)]
-            return msg
+            
         if self.d != 0:
             message = message +([0]*self.num_of_padded_zeros)
             print(message)
@@ -72,20 +69,15 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
             print("af",msg)
             return msg 
 
-        msg = self.encode_classic(message)            
+        msg = self.encode_classic(message)
+        msg = msg[0:self.payload_length] + msg[self.payload_length + self.num_of_padded_zeros:len(msg)]            
         return msg
 
     def decode(self, recieved_msg):
 
-        if self.c != 0 and self.d == 0:
-           # recieved_msg = recieved_msg[0:self.payload_length] +([0]*self.num_of_padded_zeros) + recieved_msg[self.payload_length:len(recieved_msg)]
-            print("bef", recieved_msg)
-            print("p1",recieved_msg[0:self.payload_length])
-            print("p2",recieved_msg[self.payload_length:len(recieved_msg)])
+        if self.c != 0 :
+            # add conceptual zeros
             recieved_msg =  recieved_msg[0:self.payload_length] +([0]*self.num_of_padded_zeros) + recieved_msg[self.payload_length:len(recieved_msg)]
-            corrected_msg = self.decode_classic(recieved_msg)
-            corrected_msg = corrected_msg[0:self.payload_length] + corrected_msg[self.payload_length:len(corrected_msg)]
-            return self.return_info_symbols(corrected_msg)
 
         if self.d != 0:
             recieved_msg =   ([0] * (self.p-self.c))+ recieved_msg

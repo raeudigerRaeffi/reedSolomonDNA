@@ -36,7 +36,7 @@ if __name__ == '__main__':
     test_normal_rs = reedSolomon.Generalized_Reed_Solomon(2,12,6,8,3) #TODO check Reed_Solomon(2,12,6,6,7) index out of error shouldnt happen 
     normal_msg = test_normal_rs.encode([ 5, 6, 4, 10,3,5])
     normal_msg_org = np.copy(normal_msg)
-    normal_msg[2] = 11
+    normal_msg[1] = 11
     print("corr",normal_msg)
     dec_test_normal = test_normal_rs.decode(normal_msg)
     print("norm",normal_msg_org)
