@@ -33,14 +33,14 @@ if __name__ == '__main__':
     base_list = nsc.decimal_to_base(two_byte_set)
     #TODO check Reed_Solomon(2,12,6,6,7) index out of error shouldnt happen 
     
-    inner_encoder = reedSolomon.Generalized_Reed_Solomon(2,12,6,5,3) #n 12 k 5 c 2 r 7 d 1 -> 5 + 9 - (3 -1)
-    # 3- 2 = 1   12 -3- 2 = 7 3-1 = 2
-    #test_normal_rs = reedSolomon.Generalized_Reed_Solomon(5,12,6,4,3)
-    #normal_msg = test_normal_rs.encode([ 5, 6, 4, 10,3,5])
-    #normal_msg[2] = 11
-    #dec_test_normal = test_normal_rs.decode(normal_msg)
-    #print("dec",dec_test_normal)
-   
+    test_normal_rs = reedSolomon.Generalized_Reed_Solomon(2,12,6,8,3) #TODO check Reed_Solomon(2,12,6,6,7) index out of error shouldnt happen 
+    normal_msg = test_normal_rs.encode([ 5, 6, 4, 10,3,5])
+    normal_msg_org = np.copy(normal_msg)
+    normal_msg[2] = 11
+    print("corr",normal_msg)
+    dec_test_normal = test_normal_rs.decode(normal_msg)
+    print("norm",normal_msg_org)
+    print("dec",dec_test_normal)
    
     #manual_irr_poly = [1, 13, 15, 22, 45, 19, 34, 10, 17, 5, 41, 21, 12, 3, 23, 17, 27, 8, 34, 32, 7, 40, 41, 1, 32, 26, 24, 32, 37, 5, 1]
     #paper_rs = reedSolomon.Generalized_Reed_Solomon(47,713,594,30,1,manual_irr_poly)
