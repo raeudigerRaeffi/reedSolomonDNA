@@ -1,6 +1,6 @@
 import time
 import multiprocessing
-#import reedSolomon
+import sortBlock
 
 
 class parallelReed():
@@ -30,7 +30,7 @@ class parallelReed():
 
     # Input should be a list of arrays with array-size (713x39)
     def startRsCode(self, inputList, codingType):
-        start_time = time.time()  # start time
+        start_time = time.time()  # TODO remove the time
         index = [0, 0, 0]
 
         # create manager/dict for return values
@@ -102,8 +102,9 @@ class parallelReed():
                         block[x][y] = decodedData[y]
                 return_dict.clear()
 
-                # TODO sort data with index?
-                # TODO can there be a problem with blocks intersecting and changing message parts? (we will not cover that extreme case)
+                # sort data with index
+                sort = sortBlock()
+                sort.sortBubble(block)
 
                 # Convert Data to 1 dimensional arrays (should be sortet by now after index)
                 for y in range(3, 33):  # outer decode dataStrings
@@ -126,7 +127,8 @@ class parallelReed():
                         block[x][y] = encodedData[(x - 119)]
                 return_dict.clear()
 
-        print("--- %s seconds ---" % (time.time() - start_time))
+        print("--- %s seconds ---" %
+              (time.time() - start_time))  # TODO remove the time
 
         return inputList  # TODO test without return
 
