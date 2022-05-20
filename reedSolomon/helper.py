@@ -49,7 +49,38 @@ class Galois_Helper():
         
         factor = int(self.base_field(1)/ self.base_field(p % self.base_field.characteristic))
 
-        return factor * np.sum(self.field(array_p_multplier) * self.field(matrix),axis=1)
+        return factor * np.sum(self.field(array_p_multplier) * self.field(matrix),axis=1) ##TODO check this section again wether its correct
+
+
+    def fft_on_matrix(self,matrix):
+        n = len(matrix)
+        output = []
+        for i in range(0,n):
+            output_vec = self.field(matrix[0])
+            for j in range(1,n):
+                p_factor = i * j
+                p = self.get_nth_unity_root_of_field(n)
+                vec = self.field(matrix[j])
+                output_vec = output_vec + (p**p_factor * vec)
+            output.append([int(x) for x in output_vec])
+        return output
+    
+    def ifft_on_matrix(self,matrix): #aus irgend nem grund sind hier die sachen vertauscht dafq
+        n = len(matrix)
+        output = []
+        for i in range(0,n):
+            output_vec = self.field(matrix[0])
+            for j in range(1,n):
+                p_factor = -i * j
+
+                p = self.get_nth_unity_root_of_field(n)
+                vec = self.field(matrix[j])
+                output_vec = output_vec + (p**p_factor * vec)
+            output_vec= int(-self.base_field(1)/ self.base_field(n % self.base_field.characteristic)) * output_vec
+            output.append([int(x) for x in output_vec])
+        return output
+
+
 
     def find_negative_element(self,el):#TODO check if correct
         return self.field((self.field.characteristic**self.field.degree)-1) -el

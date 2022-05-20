@@ -31,18 +31,16 @@ if __name__ == '__main__':
 
     two_byte_set = nsc.two_byte_conversion(data_string)
     base_list = nsc.decimal_to_base(two_byte_set)
-
-    inner_encoder = reedSolomon.Generalized_Reed_Solomon(2,12,9,4,3) #n 12 k 5 c 2 r 7 d 1 -> 5 + 9 - (3 -1)
+    #TODO check Reed_Solomon(2,12,6,6,7) index out of error shouldnt happen 
+    
+    inner_encoder = reedSolomon.Generalized_Reed_Solomon(2,12,6,5,3) #n 12 k 5 c 2 r 7 d 1 -> 5 + 9 - (3 -1)
     # 3- 2 = 1   12 -3- 2 = 7 3-1 = 2
-    msg = inner_encoder.encode([ 5, 6, 4, 10,3,5,5,2,5])
+    msg = inner_encoder.encode([ 5, 6, 0, 0,3,5])
     msg_org = np.copy(msg)
-    msg[1] = 0
-    print("tainted",msg)
+    msg[2] = 11
     dec_msg = inner_encoder.decode(msg)
-    print("org",msg_org)
     print("dec",dec_msg)
-    print([ 5, 6, 4, 10,3,5,5,2,5] == dec_msg)
-
+    #print("dec",dec_test_normal)
     #test_normal_rs = reedSolomon.Generalized_Reed_Solomon(5,12,6,4,3)
     #normal_msg = test_normal_rs.encode([ 5, 6, 4, 10,3,5])
     #normal_msg[2] = 11
