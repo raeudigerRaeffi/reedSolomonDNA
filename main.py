@@ -2,6 +2,8 @@
 import numpy as np
 import time
 import random
+import galois as gl
+from pyrsistent import field
 import utils.NumberSystemConversion as nsc
 import utils.dna_wheel as dna_wheel
 import reedSolomon
@@ -32,16 +34,29 @@ if __name__ == '__main__':
     two_byte_set = nsc.two_byte_conversion(data_string)
     base_list = nsc.decimal_to_base(two_byte_set)
     #TODO check Reed_Solomon(2,12,6,6,7) index out of error shouldnt happen 
-    
-    test_normal_rs = reedSolomon.Generalized_Reed_Solomon(2,12,6,8,3) #TODO check Reed_Solomon(2,12,6,6,7) index out of error shouldnt happen 
+    """
+    test_normal_rs = reedSolomon.Generalized_Reed_Solomon(2,12,6,6,3) #TODO check Reed_Solomon(2,12,6,6,7) index out of error shouldnt happen 
     normal_msg = test_normal_rs.encode([ 5, 6, 4, 10,3,5])
     normal_msg_org = np.copy(normal_msg)
-    normal_msg[1] = 11
+    normal_msg[3] = 11
     print("corr",normal_msg)
     dec_test_normal = test_normal_rs.decode(normal_msg)
     print("norm",normal_msg_org)
     print("dec",dec_test_normal)
-   
+   """
+    org_info = [30, 20, 20, 9, 25, 1, 7, 2, 0, 18, 17, 22, 11,0,0][::-1]
+    org_compare = np.copy(org_info)
+    test_normal_rs =reedSolomon.Generalized_Reed_Solomon(31,27,15,1,3)
+    normal_msg = test_normal_rs.encode(org_info)
+    normal_msg[6] = 10
+    normal_msg[9] = 12
+    normal_msg[10] = 0
+    normal_msg[16] = 4
+    normal_msg[23] = 10
+    #normal_msg =  [0,0] +normal_msg[0:13]+ normal_msg[15:len(normal_msg)]
+    dec_test_normal = test_normal_rs.decode(normal_msg)
+    print("dec",dec_test_normal)
+    print("org",org_info)
     #manual_irr_poly = [1, 13, 15, 22, 45, 19, 34, 10, 17, 5, 41, 21, 12, 3, 23, 17, 27, 8, 34, 32, 7, 40, 41, 1, 32, 26, 24, 32, 37, 5, 1]
     #paper_rs = reedSolomon.Generalized_Reed_Solomon(47,713,594,30,1,manual_irr_poly)
     #test_msg = np.random.random_integers(0,46,(30,594))
@@ -53,7 +68,7 @@ if __name__ == '__main__':
     #print("message bit to be replaces", encode_msg[7])
     #encode_msg[9] = 0
     #encode_msg[7] = 9
-    #print(encode_msg)
+    #[0, 0, 30, 20, 11, 9, 25, 1, 7, 2, 0, 18, 17, 22, 11, 5, 17, 19, 24, 17, 23, 0, 0, 14, 29, 11]
      
     #inner_encoder.systematic_decode(encode_msg)
     #print(inner_encoder.decode(encode_msg) == msg)

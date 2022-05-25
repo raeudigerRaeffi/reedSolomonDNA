@@ -1,9 +1,10 @@
+from xmlrpc.client import Boolean
 import galois as gl
 
 from . import helper
 
 class Base_Reed_Solomon():
-    def __init__(self, field_size:int, message_length:int, payload_length:int,symbol_size:int,irr_poly=None):
+    def __init__(self, field_size:int, message_length:int, payload_length:int,symbol_size:int,irr_poly=None,debug=True,p=1):
         self.field_size = field_size
         if irr_poly ==None:
             try:
@@ -17,7 +18,7 @@ class Base_Reed_Solomon():
         self.message_length = message_length
         self.payload_length = payload_length
         self.two_s = message_length - payload_length
-        self.helper = helper.Galois_Helper(self.galois_field)
+        self.helper = helper.Galois_Helper(self.galois_field,p,debug)
     
     
 
