@@ -44,15 +44,11 @@ if __name__ == '__main__':
     print("norm",normal_msg_org)
     print("dec",dec_test_normal)
    """
-    org_info = [30, 20, 20, 9, 25, 1, 7, 2, 0, 18, 17, 22, 11,0,0][::-1]
+    org_info = [30, 20, 20, 9, 25, 1, 7, 2, 0, 18, 17, 22, 11,0,0]
     org_compare = np.copy(org_info)
     test_normal_rs =reedSolomon.Generalized_Reed_Solomon(31,27,15,1,3)
     normal_msg = test_normal_rs.encode(org_info)
-    normal_msg[6] = 10
-    normal_msg[9] = 12
-    normal_msg[10] = 0
-    normal_msg[16] = 4
-    normal_msg[23] = 10
+  
     #normal_msg =  [0,0] +normal_msg[0:13]+ normal_msg[15:len(normal_msg)]
     dec_test_normal = test_normal_rs.decode(normal_msg)
     print("dec",dec_test_normal)
