@@ -44,15 +44,27 @@ if __name__ == '__main__':
     print("norm",normal_msg_org)
     print("dec",dec_test_normal)
    """
-    org_info = [30, 20, 20, 9, 25, 1, 7, 2, 0, 18, 17, 22, 11,0,0]
+    #org_info = [30, 20, 20, 9, 25, 1, 7, 2, 0, 18, 17, 22, 11,0,0,30, 20, 20, 9, 25, 1, 7, 2, 0, 18, 17, 22, 11,0,0,2,3,4]
+    #org_info = [2,3,2,1,10,2,1,2,4,6,1,6,7,4]
+    org_info = np.random.randint(2000, size=594).tolist()
     org_compare = np.copy(org_info)
-    test_normal_rs =reedSolomon.Generalized_Reed_Solomon(31,27,15,1,3)
+    irr_poly_47 = [ 1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, 32]
+    test_normal_rs =reedSolomon.Generalized_Reed_Solomon(field_size=47,
+                                                                 message_length=713,
+                                                                 payload_length=594,
+                                                                 symbol_size=30,
+                                                                 p_factor=7,
+                                                                irr_poly=irr_poly_47)
     normal_msg = test_normal_rs.encode(org_info)
+    normal_msg[1] = 10
+    normal_msg[9] = 12
+    normal_msg[10] = 0
   
     #normal_msg =  [0,0] +normal_msg[0:13]+ normal_msg[15:len(normal_msg)]
     dec_test_normal = test_normal_rs.decode(normal_msg)
     print("dec",dec_test_normal)
     print("org",org_info)
+    print(dec_test_normal == org_info)
     #manual_irr_poly = [1, 13, 15, 22, 45, 19, 34, 10, 17, 5, 41, 21, 12, 3, 23, 17, 27, 8, 34, 32, 7, 40, 41, 1, 32, 26, 24, 32, 37, 5, 1]
     #paper_rs = reedSolomon.Generalized_Reed_Solomon(47,713,594,30,1,manual_irr_poly)
     #test_msg = np.random.random_integers(0,46,(30,594))
