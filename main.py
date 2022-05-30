@@ -33,19 +33,8 @@ if __name__ == '__main__':
 
     two_byte_set = nsc.two_byte_conversion(data_string)
     base_list = nsc.decimal_to_base(two_byte_set)
-    #TODO check Reed_Solomon(2,12,6,6,7) index out of error shouldnt happen 
+   
     """
-    test_normal_rs = reedSolomon.Generalized_Reed_Solomon(2,12,6,6,3) #TODO check Reed_Solomon(2,12,6,6,7) index out of error shouldnt happen 
-    normal_msg = test_normal_rs.encode([ 5, 6, 4, 10,3,5])
-    normal_msg_org = np.copy(normal_msg)
-    normal_msg[3] = 11
-    print("corr",normal_msg)
-    dec_test_normal = test_normal_rs.decode(normal_msg)
-    print("norm",normal_msg_org)
-    print("dec",dec_test_normal)
-   """
-    #org_info = [30, 20, 20, 9, 25, 1, 7, 2, 0, 18, 17, 22, 11,0,0,30, 20, 20, 9, 25, 1, 7, 2, 0, 18, 17, 22, 11,0,0,2,3,4]
-    #org_info = [2,3,2,1,10,2,1,2,4,6,1,6,7,4]
     org_info = np.random.randint(2000, size=594).tolist()
     org_compare = np.copy(org_info)
     irr_poly_47 = [ 1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, 32]
@@ -54,7 +43,9 @@ if __name__ == '__main__':
                                                                  payload_length=594,
                                                                  symbol_size=30,
                                                                  p_factor=7,
-                                                                irr_poly=irr_poly_47)
+                                                                irr_poly=irr_poly_47,
+                                                                debug=False)
+    
     normal_msg = test_normal_rs.encode(org_info)
     normal_msg[1] = 10
     normal_msg[9] = 12
@@ -65,24 +56,38 @@ if __name__ == '__main__':
     print("dec",dec_test_normal)
     print("org",org_info)
     print(dec_test_normal == org_info)
-    #manual_irr_poly = [1, 13, 15, 22, 45, 19, 34, 10, 17, 5, 41, 21, 12, 3, 23, 17, 27, 8, 34, 32, 7, 40, 41, 1, 32, 26, 24, 32, 37, 5, 1]
-    #paper_rs = reedSolomon.Generalized_Reed_Solomon(47,713,594,30,1,manual_irr_poly)
-    #test_msg = np.random.random_integers(0,46,(30,594))
-    #test_msg_transformed = paper_rs.convert_to_symbol_array(test_msg)
-    #print(len(test_msg_transformed))
-    #paper_rs.encode(test_msg_transformed)
-    #encode_msg = inner_encoder.systematic_encoding(msg)
+    """
+    start = time.process_time()
+    info_symbols = [
+        [20,5],
+        [35,10],
+        [5,10],
+        [35,20],
+        [35,10],
+        [3,10],
+        [35,10],
+        [35,2],
+        [5,10],
+        [35,10]
+    ]
+    #irr_poly_47 = [ 1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, 32]
     
-    #print("message bit to be replaces", encode_msg[7])
-    #encode_msg[9] = 0
-    #encode_msg[7] = 9
-    #[0, 0, 30, 20, 11, 9, 25, 1, 7, 2, 0, 18, 17, 22, 11, 5, 17, 19, 24, 17, 23, 0, 0, 14, 29, 11]
-     
-    #inner_encoder.systematic_decode(encode_msg)
-    #print(inner_encoder.decode(encode_msg) == msg)
-    #print(base_list)
-
-    # Performance counter
+    test_normal_rs =reedSolomon.Generalized_Reed_Solomon(field_size=47,
+                                                                 message_length=14,
+                                                                 payload_length=10,
+                                                                 symbol_size=2,
+                                                                 p_factor=2,
+                                                         
+                                                                debug=False)
+    symbols = test_normal_rs.convert_to_symbol_array(info_symbols)
+    symbols_encoded = test_normal_rs.encode(info_symbols)
+    symbols_encoded[0] =1
+    symbols_decoded = test_normal_rs.decode(symbols_encoded)
+    conv_back = test_normal_rs.symbol_array_to_array(symbols_decoded)
+    print(conv_back)
+    print(info_symbols == conv_back)
+    print(time.process_time() - start)
+    
     print(str(time.perf_counter()/1000)+' s')
 
 
