@@ -10,6 +10,9 @@ class gui():
     codingType = 0
     root = None
 
+    def __init__(self):
+        pass
+
     def selectTextFile():
         # file type
         filetypes = (

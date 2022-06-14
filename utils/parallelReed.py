@@ -1,6 +1,6 @@
 import time
 import multiprocessing
-import sortBlock
+import utils.sortBlock as sortBlock
 
 
 class parallelReed():
@@ -40,6 +40,8 @@ class parallelReed():
         if(codingType == 0):
             print("Encode")
             for block in inputList:
+                # TODO put data in as a list, and then write it back in the array.
+                # Outer encode is 47^30
                 # Convert Data to 1 dimensional arrays
                 for y in range(3, 34):  # outer encode dataStrings
                     dataString = []
