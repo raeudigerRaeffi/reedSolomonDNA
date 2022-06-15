@@ -35,6 +35,18 @@ def int_to_bools(value):  # WORKS!
 
     return bits
 
+
+def int_to_bools(value):  # WORKS!
+    bits = [False, False, False, False, False, False, False, False]
+    for i in range(8):
+        if(value != 0):
+            bits[7 - i] = ((value % 2) >= 1)
+            value = value / 2
+        else:
+            break
+
+    return bits
+
 # numpy_boolean_array: “NUMPY {'descr': '|b1', 'fortran_order': False, 'shape': (12690688,), }"
 
 
@@ -62,12 +74,6 @@ def encode(string_file_name, numpy_boolean_array):
     '''
 
     # change numpy_boolean_array to an char array
-    '''
-    length = int(numpy_boolean_array.shape[0] / 8)  # WORKS!
-    if((numpy_boolean_array.shape[0] % 8) != 0):
-        length += 1
-    arr_out = np.empty([length, 1], dtype=int)
-    '''
     arr_out = []
     byte = [False, False, False, False, False, False, False, False]
     byte_pointer = 0
@@ -75,7 +81,6 @@ def encode(string_file_name, numpy_boolean_array):
     for bit in numpy_boolean_array:
         byte[byte_pointer] = bit
         if(byte_pointer == 7):
-            #arr_out[arr_out_pointer, 0] = bools_to_int(byte)
             arr_out.append(bools_to_int(byte))
             arr_out_pointer += 1
             byte_pointer = 0
@@ -86,17 +91,10 @@ def encode(string_file_name, numpy_boolean_array):
         while(byte_pointer < 8):
             byte[byte_pointer] = False
             byte_pointer += 1
-        #arr_out[arr_out_pointer, 0] = bools_to_int(byte)
         arr_out.append(bools_to_int(byte))
 
-    # convert von 256**2 zu 47**3 #TODO find here a working function
-    #two_byte_set = nsc.two_byte_conversion(arr_out)
-    #base_list = nsc.decimal_to_base(two_byte_set)
-    if((len(arr_out) % 2) != 0):
-        arr_out.append(0)
-    base_list = nsc.decimal_to_base(arr_out)
-
-    print(base_list[:10])
+    # convert von 256**2 zu 47**3
+    base_list = nsc.decimal_to_base_list(arr_out)
 
     # verarbeite daten (array -> string -> liste(matrix)) (594x30)
     dataList = dataToBlock(119, 3, 712, 32, base_list)
@@ -127,6 +125,7 @@ def decode(string_file_name, list_of_dna_strings):
     dna_wheel_instance = dna_wheel()
 
     # reed codes
+    '''
     irr_poly_47 = [1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, 32]
     inner_encoder = reedSolomon.Generalized_Reed_Solomon(field_size=47,
@@ -142,6 +141,7 @@ def decode(string_file_name, list_of_dna_strings):
                                                          p_factor=7,
                                                          irr_poly=irr_poly_47)
     reedWorker = parallelReed(inner_encoder, outer_encoder)
+    '''
 
     # wandle daten um (basenpaare -> integer)
     # Base to dezimal
@@ -165,22 +165,24 @@ def decode(string_file_name, list_of_dna_strings):
                 pos += 1
 
     # decode daten
-    reedWorker.startRsCode(dataList, 1)
+    # reedWorker.startRsCode(dataList, 1)
 
+    # TODO prüfe ob wir abbrechen müssen, wegen 0 padding, temporäre solution in 47^3 zu 256^2 => wenn alles 0 dann gebe 2 nullen aus
     # verarbeite daten (array -> string)
-    finished = False
+    output = []
     for block in dataList:
         for x in range(119, 713):
             for y in range(3, 33):
                 output.append(block[x][y])
 
     # convert von 47**3 zu 256**2
-    # TODO find a working implementation
+    converted_output = nsc.base_list_to_decimal(output)
 
     # change char array to an numpy_boolean_array
-    numpy_boolean_array = np.empty([len(output), 1], dtype=bool)  # WORKS!
+    numpy_boolean_array = np.empty(
+        [len(converted_output), 1], dtype=bool)  # WORKS!
     arr_out_pointer = 0
-    for number in output:
+    for number in converted_output:
         if(number == 0):
             break
         for bool_val in int_to_bools(number):
@@ -240,17 +242,38 @@ def dataToBlock(xStart, yStart, xEnd, yEnd, inputData):
 
 
 if __name__ == "__main__":
-    output = []
-
     # load numpy arrays from files.
     # has boolean values <- convert boolean to numbers and later numbers to boolean. Way more work?
     # use numpy save to save the result
 
     # https://www.uni-marburg.de/en/fb12/research-groups/distsys/software/mesa
+    test = [12, 33, 234, 22, 65, 77, 91, 123, 156, 233, 23, 10, 0, 2]
+    test2 = nsc.decimal_to_base_list(test)
+    print(test2)
 
+    test3 = nsc.base_list_to_decimal(test2)
+    print(test3)
+
+    errors = 0
+    for x in range(0, 256):
+        for y in range(0, 256):
+            test_set = [x, y]
+            converted_test_set = nsc.decimal_to_base_list(test_set)
+            reverted_test_set = nsc.base_list_to_decimal(converted_test_set)
+            for i, ele in enumerate(test_set):
+                if(reverted_test_set[i] != ele):
+                    print("Error!", test_set,
+                          converted_test_set, reverted_test_set)
+                    errors += 1
+                    break
+
+    print(errors)
+
+    '''
     arr = encode("", np.load("data/Ulysses.npy"))
 
     print(arr)
+    '''
     #mask = np.array([2**i for i in range(8)])
     #cov = np.sum(mask * arr.reshape((-1, 8)), axis=1).reshape(arr.shape[0], -1)
     # print(cov)
@@ -307,20 +330,20 @@ if __name__ == "__main__":
     else:
         sys.exit("It needs to be 0 - Encoding or 1 - Decoding!")
     '''
-    '''
+'''
     dna_wheel_instance = dna_wheel()
 
     temp = gui()
     codingType, filepath = temp.getUserInput(3)
     '''
-    '''
+'''
     inner_encoder = reedSolomon.Generalized_Reed_Solomon(field_size=47,
                                                          message_length=39,
                                                          payload_length=33,
                                                          symbol_size=1,
                                                          p_factor=7)
     '''
-    '''
+'''
     irr_poly_47 = [1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, 32]
     outer_encoder = reedSolomon.Generalized_Reed_Solomon(field_size=47,
