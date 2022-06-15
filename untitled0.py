@@ -35,18 +35,6 @@ def int_to_bools(value):  # WORKS!
 
     return bits
 
-
-def int_to_bools(value):  # WORKS!
-    bits = [False, False, False, False, False, False, False, False]
-    for i in range(8):
-        if(value != 0):
-            bits[7 - i] = ((value % 2) >= 1)
-            value = value / 2
-        else:
-            break
-
-    return bits
-
 # numpy_boolean_array: “NUMPY {'descr': '|b1', 'fortran_order': False, 'shape': (12690688,), }"
 
 
@@ -73,7 +61,7 @@ def encode(string_file_name, numpy_boolean_array):
     reedWorker = parallelReed(inner_encoder, outer_encoder)
     '''
 
-    # change numpy_boolean_array to an char array
+    # Boolean (Array[n:1]) -> 256**2 (List)
     arr_out = []
     byte = [False, False, False, False, False, False, False, False]
     byte_pointer = 0
@@ -93,29 +81,41 @@ def encode(string_file_name, numpy_boolean_array):
             byte_pointer += 1
         arr_out.append(bools_to_int(byte))
 
-    # convert von 256**2 zu 47**3
-    base_list = nsc.decimal_to_base_list(arr_out)
+    # 256**2 (List) -> 47**3 (List)
+    base_list = nsc.char2pfe(arr_out)
 
-    # verarbeite daten (array -> string -> liste(matrix)) (594x30)
-    dataList = dataToBlock(119, 3, 712, 32, base_list)
-    print(dataList)
+    # 47**3 (List) -> 47**3 (Array[Array[713,39]])
+    dataList = []
+    dataList.append(np.zeros((713, 39), dtype=int))
+
+    block = 0
+    x = 119
+    y = 2
+    for d in base_list:
+        if(y < 32):
+            y += 1
+        elif(x < 712):
+            y = 3
+            x += 1
+        else:
+            x = 119
+            y = 3
+            dataList.append(np.zeros((713, 39), dtype=int))
+            block += 1
+
+        (dataList[block])[x][y] = d
 
     # encode daten
     # TODO inner or outer needs to be changeds
     # reedWorker.startRsCode(dataList, 0)
 
-    # verarbeite daten (liste(matrix) -> string) und wandle in basenpaare um
+    # 47**3 (Array[Array[713,39]]) -> ACGT (List(x*713) of Strings(117))
     for block in dataList:
         for x in range(0, 713):
-            row = []
+            row = ""
             for y in range(0, 39):
-                row.append(
-                    dna_wheel_instance.number_to_pair[block[x][y]])
+                row += dna_wheel_instance.number_to_pair[block[x][y]]
             list_of_dna_strings.append(row)
-
-    print(block)
-
-    # output 713*n columns which are 117 nt long
 
     return list_of_dna_strings
 
@@ -143,15 +143,14 @@ def decode(string_file_name, list_of_dna_strings):
     reedWorker = parallelReed(inner_encoder, outer_encoder)
     '''
 
-    # wandle daten um (basenpaare -> integer)
-    # Base to dezimal
+    # ACGT (List(x*713) of Strings(117)) -> 47**3 (Array[Array[713,39]])
     dataList = []
     block = 0
     for i, row in enumerate(list_of_dna_strings):
         if(i % 713 == 0):
-            dataList.append(np.zeros((713, 39)))
-            if(i != 0):
-                i += 1
+            dataList.append(np.zeros((713, 39), dtype=int))
+            if(i > 0):
+                block += 1
         pair = ''
         index = 0
         pos = 0
@@ -159,86 +158,35 @@ def decode(string_file_name, list_of_dna_strings):
             pair += base
             index += 1
             if(index > 2):
-                (dataList[i])[i %
-                              713][pos] = dna_wheel_instance.pair_to_number[pair]
+                (dataList[block])[i %
+                                  713][pos] = dna_wheel_instance.pair_to_number[pair]
+                pair = ''
                 index = 0
                 pos += 1
 
     # decode daten
     # reedWorker.startRsCode(dataList, 1)
 
-    # TODO prüfe ob wir abbrechen müssen, wegen 0 padding, temporäre solution in 47^3 zu 256^2 => wenn alles 0 dann gebe 2 nullen aus
-    # verarbeite daten (array -> string)
+    # 47**3 (Array[Array[713,39]]) -> 47**3 (List) #TODO here could be an error
     output = []
     for block in dataList:
         for x in range(119, 713):
             for y in range(3, 33):
                 output.append(block[x][y])
 
-    # convert von 47**3 zu 256**2
-    converted_output = nsc.base_list_to_decimal(output)
+    # 47**3 (List) -> 256**2 (List)
+    converted_output = nsc.pfe2char(output)
 
-    # change char array to an numpy_boolean_array
+    # 256**2 (List) -> Boolean (Array[n:1])
     numpy_boolean_array = np.empty(
-        [len(converted_output), 1], dtype=bool)  # WORKS!
+        [int(len(converted_output)*8), 1], dtype=bool)  # WORKS!
     arr_out_pointer = 0
     for number in converted_output:
-        if(number == 0):
-            break
         for bool_val in int_to_bools(number):
             numpy_boolean_array[arr_out_pointer] = bool_val
             arr_out_pointer += 1
 
-    return numpy_boolean_array[0:arr_out_pointer][0]  # WORKS!
-
-
-def load_dataset(filepath='data/the_federal_charter_of_1291.txt'):
-    '''
-    Load the dataset as string
-    Parameters
-    ----------
-    filepath : string
-    Returns
-    -------
-    data_string : string
-    '''
-    with open(filepath) as file:
-        data_string = file.read()
-    return data_string
-
-
-def dataToBlock(xStart, yStart, xEnd, yEnd, inputData):
-    dataList = []
-
-    print(len(inputData))
-
-    data = np.zeros((713, 39))  # first is column, second is row
-
-    x = (xStart - 1)
-    y = yStart
-    for d in inputData:
-        if(x < xEnd):
-            x += 1
-        elif(y < yEnd):
-            x = 119
-            y += 1
-        else:
-            x = xStart
-            y = yStart
-            dataList.append(data)
-            print(len(dataList))
-            data = np.zeros((713, 39))
-
-        # print(x,y)
-        data[x][y] = d
-
-    if(len(dataList) == 0):
-        dataList.append(data)
-
-    print(len(dataList))
-    print(dataList)
-
-    return dataList
+    return numpy_boolean_array[0:arr_out_pointer]  # WORKS!
 
 
 if __name__ == "__main__":
@@ -247,177 +195,245 @@ if __name__ == "__main__":
     # use numpy save to save the result
 
     # https://www.uni-marburg.de/en/fb12/research-groups/distsys/software/mesa
-    test = [12, 33, 234, 22, 65, 77, 91, 123, 156, 233, 23, 10, 0, 2]
-    test2 = nsc.decimal_to_base_list(test)
-    print(test2)
 
-    test3 = nsc.base_list_to_decimal(test2)
-    print(test3)
+    # Teste data -> encode() -> decode() -> data (ohne rs codes)
+    print("Load File...")
+    # input_arr = np.load("data/La_Jeunesse.npy") # kurzes test-set
+    input_arr = np.load("data/Ulysses.npy")  # langes test-set
+
+    print("Encoding...")
+    arr = encode("", input_arr)
+    print("Decoding...")
+    arr2 = decode("", arr)
 
     errors = 0
-    for x in range(0, 256):
-        for y in range(0, 256):
-            test_set = [x, y]
-            converted_test_set = nsc.decimal_to_base_list(test_set)
-            reverted_test_set = nsc.base_list_to_decimal(converted_test_set)
-            for i, ele in enumerate(test_set):
-                if(reverted_test_set[i] != ele):
-                    print("Error!", test_set,
-                          converted_test_set, reverted_test_set)
-                    errors += 1
-                    break
+    for i, bool_val in enumerate(input_arr):
+        if(i < len(arr2)):
+            if(arr2[i] != bool_val):
+                errors += 1
 
     print(errors)
 
     '''
-    arr = encode("", np.load("data/Ulysses.npy"))
-
-    print(arr)
-    '''
-    #mask = np.array([2**i for i in range(8)])
-    #cov = np.sum(mask * arr.reshape((-1, 8)), axis=1).reshape(arr.shape[0], -1)
-    # print(cov)
-
-    # sys.exit("STOP!")
-
-    '''
     temp = gui()
     codingType, filepath = temp.getUserInput(3)
 
     if(codingType == 0):  # encoding
-        # lese daten
-        data_string = load_dataset(filepath)
-        print(data_string)
-
-        encode()
+        print("encode")
     elif(codingType == 1):  # decoding
-        print("work in progress!")
-        # lese daten
-        data_string = load_dataset(filepath)
-
-        # wandle daten um (basenpaare -> integer)
-        # Base to dezimal
-        base_list = []
-        pair = ''
-        index = 0
-        for base in data_string:
-            pair += base
-            index += 1
-            if(index > 2):
-                base_list.append(dna_wheel_instance.pair_to_number[pair])
-                index = 0
-
-        # verarbeite daten (string -> liste(matrix))
-        # TODO check if that is correct, could be that the date is set to 30-long strings and put then together, talk to the others?
-        dataList = dataToBlock(0, 0, 712, 38, base_list)
-
-        # decode daten
-        reedWorker.startRsCode(dataList, codingType)
-
-        # convert von 47**3 zu 256**2
-        # TODO
-
-        # verarbeite daten (array -> string)
-        for block in dataList:
-            for x in range(119, 713):
-                for y in range(3, 33):
-                    output[index] = block[x][y]
-                    index += 1
-
-        # speichere daten
-        # our data is in output
-        # TODO
+        print("decode")
     else:
         sys.exit("It needs to be 0 - Encoding or 1 - Decoding!")
     '''
-'''
+    '''
+    # Teste data -> block -> liste Basenpaare -> block -> data
     dna_wheel_instance = dna_wheel()
 
-    temp = gui()
-    codingType, filepath = temp.getUserInput(3)
-    '''
-'''
-    inner_encoder = reedSolomon.Generalized_Reed_Solomon(field_size=47,
-                                                         message_length=39,
-                                                         payload_length=33,
-                                                         symbol_size=1,
-                                                         p_factor=7)
-    '''
-'''
-    irr_poly_47 = [1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-                   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, 32]
-    outer_encoder = reedSolomon.Generalized_Reed_Solomon(field_size=47,
-                                                         message_length=713,
-                                                         payload_length=594,
-                                                         symbol_size=30,
-                                                         p_factor=7,
-                                                         irr_poly=irr_poly_47)
-    inner_encoder = outer_encoder
+    # lade daten
+    input_arr = np.load("data/La_Jeunesse.npy")
 
-    reedWorker = parallelReed(inner_encoder, outer_encoder)
+    arr_out = []
+    byte = [False, False, False, False, False, False, False, False]
+    byte_pointer = 0
+    arr_out_pointer = 0
+    for bit in input_arr:
+        byte[byte_pointer] = bit
+        if(byte_pointer == 7):
+            arr_out.append(bools_to_int(byte))
+            arr_out_pointer += 1
+            byte_pointer = 0
+        else:
+            byte_pointer += 1
 
-    if(codingType == 0):  # encoding
-        # lese daten
-        data_string = load_dataset(filepath)
-        print(data_string)
+    if(byte_pointer != 0):  # WORKS!
+        while(byte_pointer < 8):
+            byte[byte_pointer] = False
+            byte_pointer += 1
+        arr_out.append(bools_to_int(byte))
 
-        # convert von 256**2 zu 47**3
-        two_byte_set = nsc.two_byte_conversion(data_string)
-        base_list = nsc.decimal_to_base(two_byte_set)
-        print(base_list)
+    # convert von 256**2 zu 47**3
+    base_list = nsc.char2pfe(arr_out)
 
-        # verarbeite daten (array -> string -> liste(matrix)) (594x30)
-        # TODO check if that is correct, could be that the date is set to 30-long strings and put then together, talk to the others?
-        dataList = dataToBlock(119, 3, 712, 32, base_list)
+    # 47**3 (List) -> 47**3 (Array[Array[713,39]])
+    # dataList = dataToBlock(119, 3, 712, 32, base_list)
+    dataList = []
+    dataList.append(np.zeros((713, 39), dtype=int))
 
-        # encode daten
-        reedWorker.startRsCode(dataList, codingType)
+    block = 0
+    x = 119
+    y = 2
+    for d in base_list:
+        if(y < 32):
+            y += 1
+        elif(x < 712):
+            y = 3
+            x += 1
+        else:
+            x = 119
+            y = 3
+            dataList.append(np.zeros((713, 39), dtype=int))
+            block += 1
 
-        # verarbeite daten (liste(matrix) -> string) und wandle in basenpaare um
-        for block in dataList:
-            for x in range(119, 713):
-                for y in range(3, 33):
-                    output.append(
-                        dna_wheel_instance.number_to_pair[block[x][y]])
+        (dataList[block])[x][y] = d
 
-        # speicher daten
-        # our data is in output
-    elif(codingType == 1):  # decoding
-        # lese daten
-        data_string = load_dataset(filepath)
+    # 47**3 (Array[Array[713,39]]) -> ACGT (List(x*713) of Strings(117))
+    list_of_dna_strings = []
+    for block in dataList:
+        for x in range(0, 713):
+            row = ""
+            for y in range(0, 39):
+                row += dna_wheel_instance.number_to_pair[block[x][y]]
+            if(len(row) != 117):
+                print(len(row))
+            list_of_dna_strings.append(row)
 
-        # wandle daten um (basenpaare -> integer)
-        # Base to dezimal
-        base_list = []
+    # ACGT (List(x*713) of Strings(117)) -> 47**3 (Array[Array[713,39]])
+    dataList = []
+    block = 0
+    for i, row in enumerate(list_of_dna_strings):
+        if(i % 713 == 0):
+            dataList.append(np.zeros((713, 39), dtype=int))
+            if(i > 0):
+                block += 1
         pair = ''
         index = 0
-        for base in data_string:
+        pos = 0
+        for base in row:
             pair += base
             index += 1
             if(index > 2):
-                base_list.append(dna_wheel_instance.pair_to_number[pair])
+                (dataList[block])[i %
+                                  713][pos] = dna_wheel_instance.pair_to_number[pair]
+                pair = ''
                 index = 0
+                pos += 1
 
-        # verarbeite daten (string -> liste(matrix))
-        # TODO check if that is correct, could be that the date is set to 30-long strings and put then together, talk to the others?
-        dataList = dataToBlock(0, 0, 712, 38, base_list)
+    errors = 0
+    for b, block in enumerate(dataList):
+        for x, list1 in enumerate(block):
+            for y, ele in enumerate(list1):
+                if(ele != (dataList[b])[x][y]):
+                    errors += 1
 
-        # decode daten
-        reedWorker.startRsCode(dataList, codingType)
+    print(errors)
 
-        # convert von 47**3 zu 256**2
-        # TODO
+    # Teste 256^2 -> 47^3 -> 256^3 converting
+    input_arr = np.load("data/La_Jeunesse.npy")
 
-        # verarbeite daten (array -> string)
-        for block in dataList:
-            for x in range(119, 713):
-                for y in range(3, 33):
-                    output[index] = block[x][y]
-                    index += 1
+    arr_out = []
+    byte = [False, False, False, False, False, False, False, False]
+    byte_pointer = 0
+    arr_out_pointer = 0
+    for bit in input_arr:
+        byte[byte_pointer] = bit
+        if(byte_pointer == 7):
+            arr_out.append(bools_to_int(byte))
+            arr_out_pointer += 1
+            byte_pointer = 0
+        else:
+            byte_pointer += 1
 
-        # speichere daten
-        # our data is in output
-        # TODO
-    else:
-        sys.exit("It needs to be 0 - Encoding or 1 - Decoding!")
-        '''
+    if(byte_pointer != 0):  # WORKS!
+        while(byte_pointer < 8):
+            byte[byte_pointer] = False
+            byte_pointer += 1
+        arr_out.append(bools_to_int(byte))
+
+    # convert von 256**2 zu 47**3
+    base_list = nsc.char2pfe(arr_out)
+
+    # convert von 47**3 zu 256**2
+    reverted_test_set = nsc.pfe2char(base_list)
+
+    # print(reverted_test_set)
+
+    errors = 0
+    for i, test in enumerate(arr_out):
+        if(test != reverted_test_set[i]):
+            print(test, "=>", reverted_test_set[i])
+            errors += 1
+
+    print(errors)
+
+    # Teste Boolean -> Int -> Boolean converting
+    input_arr = np.load("data/La_Jeunesse.npy")
+
+    arr_out = []
+    byte = [False, False, False, False, False, False, False, False]
+    byte_pointer = 0
+    arr_out_pointer = 0
+    for bit in input_arr:
+        byte[byte_pointer] = bit
+        if(byte_pointer == 7):
+            arr_out.append(bools_to_int(byte))
+            arr_out_pointer += 1
+            byte_pointer = 0
+        else:
+            byte_pointer += 1
+
+    if(byte_pointer != 0):  # WORKS!
+        while(byte_pointer < 8):
+            byte[byte_pointer] = False
+            byte_pointer += 1
+        arr_out.append(bools_to_int(byte))
+
+    numpy_boolean_array = np.empty(
+        [int(len(reverted_test_set)*8), 1], dtype=bool)  # WORKS!
+    arr_out_pointer = 0
+    for number in reverted_test_set:
+        for bool_val in int_to_bools(number):
+            numpy_boolean_array[arr_out_pointer] = bool_val
+            arr_out_pointer += 1
+
+    errors = 0
+    for i, test in enumerate(input_arr):
+        if(test != numpy_boolean_array[i]):
+            print(test, "=>", numpy_boolean_array[i])
+            errors += 1
+
+    print(errors)
+    
+    # Teste Boolean -> 256^2 -> 47^3 -> 256^2 -> Boolean converting
+    input_arr = np.load("data/La_Jeunesse.npy")
+
+    arr_out = []
+    byte = [False, False, False, False, False, False, False, False]
+    byte_pointer = 0
+    arr_out_pointer = 0
+    for bit in input_arr:
+        byte[byte_pointer] = bit
+        if(byte_pointer == 7):
+            arr_out.append(bools_to_int(byte))
+            arr_out_pointer += 1
+            byte_pointer = 0
+        else:
+            byte_pointer += 1
+
+    if(byte_pointer != 0):  # WORKS!
+        while(byte_pointer < 8):
+            byte[byte_pointer] = False
+            byte_pointer += 1
+        arr_out.append(bools_to_int(byte))
+
+    # convert von 256**2 zu 47**3
+    base_list = nsc.char2pfe(arr_out)
+
+    # convert von 47**3 zu 256**2
+    reverted_test_set = nsc.pfe2char(base_list)
+
+    numpy_boolean_array = np.empty(
+        [int(len(reverted_test_set)*8), 1], dtype=bool)  # WORKS!
+    arr_out_pointer = 0
+    for number in reverted_test_set:
+        for bool_val in int_to_bools(number):
+            numpy_boolean_array[arr_out_pointer] = bool_val
+            arr_out_pointer += 1
+
+    errors = 0
+    for i, test in enumerate(input_arr):
+        if(test != numpy_boolean_array[i]):
+            print(test, "=>", numpy_boolean_array[i])
+            errors += 1
+
+    print(errors)
+    '''
