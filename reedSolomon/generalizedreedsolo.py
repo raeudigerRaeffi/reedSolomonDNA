@@ -48,7 +48,7 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         self.helper.debug_print("before encode",message,len(message))
         msg = self.encode_classic(message)
         self.helper.debug_print("before cutoff",msg,len(msg))
-        msg = msg[self.num_of_padded_zeros:len(msg)] #+ msg[self.payload_length + self.num_of_padded_zeros:len(msg)]            
+        msg = [int(x)for x in msg[self.num_of_padded_zeros:len(msg)]] #+ msg[self.payload_length + self.num_of_padded_zeros:len(msg)]            
         return msg
 
     def decode(self, recieved_msg):

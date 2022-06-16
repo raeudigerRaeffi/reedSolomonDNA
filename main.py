@@ -70,20 +70,21 @@ if __name__ == '__main__':
         [5,10],
         [35,10]
     ]
-    #irr_poly_47 = [ 1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, 32]
-    
+     
     test_normal_rs =reedSolomon.Generalized_Reed_Solomon(field_size=47,
                                                                  message_length=14,
                                                                  payload_length=10,
                                                                  symbol_size=2,
                                                                  p_factor=2,
                                                          
-                                                                debug=False)
+                                                                debug=True)
     symbols = test_normal_rs.convert_to_symbol_array(info_symbols)
-    symbols_encoded = test_normal_rs.encode(info_symbols)
+    print("symbols",symbols)
+    symbols_encoded = test_normal_rs.encode(symbols)
     symbols_encoded[0] =1
     symbols_decoded = test_normal_rs.decode(symbols_encoded)
     conv_back = test_normal_rs.symbol_array_to_array(symbols_decoded)
+    
     print(conv_back)
     print(info_symbols == conv_back)
     print(time.process_time() - start)
