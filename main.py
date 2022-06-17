@@ -28,11 +28,6 @@ if __name__ == '__main__':
     Main function
     '''
 
-    dna_wheel_instance = dna_wheel()
-    data_string = load_dataset()
-
-    two_byte_set = nsc.two_byte_conversion(data_string)
-    base_list = nsc.decimal_to_base(two_byte_set)
    
     """
     org_info = np.random.randint(2000, size=594).tolist()

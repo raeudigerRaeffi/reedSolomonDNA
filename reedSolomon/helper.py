@@ -29,6 +29,13 @@ def ifft_step(p_unity,matrix,characteristic,exponent,irr_poly,iteration_step):
 class Galois_Helper():
 
     def __init__(self,_field,pool,debug_mode) -> None:
+        """helper class in order to perform some galois field calculations
+
+        Args:
+            _field (galois field): galois field
+            pool (int): pool to perform multithreading
+            debug_mode (boolean): allows priniting out of steps
+        """
         self.field = _field
         self.pool = pool
         self.base_field = gl.Field(_field.characteristic)
@@ -46,6 +53,17 @@ class Galois_Helper():
 
 
     def get_nth_unity_root_of_field(self,n):
+        """return nth root of unity
+
+        Args:
+            n (int): _description_
+
+        Raises:
+            ValueError: if nth root of unity does not exist in field
+
+        Returns:
+            _type_: _description_
+        """
         power_of_one = (self.field.characteristic **self.field.degree)-1 #self.get_power_of_field_element(self.field(1))
         if power_of_one % n != 0:
             raise ValueError("failure in getting nth root") 
