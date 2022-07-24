@@ -137,7 +137,7 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
             ## handles case when lth degree of polynominal is zero after modulo
             f_values_to_add = (f_i % self.generator_set[f_index]).coeffs.tolist()
             if len(f_values_to_add) < l:
-                f_values_to_add = [0] + f_values_to_add
+                f_values_to_add = [0]*(l -len(f_values_to_add)) + f_values_to_add
             f_values.append(f_values_to_add)
 
         

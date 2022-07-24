@@ -53,7 +53,8 @@ if __name__ == '__main__':
     print(dec_test_normal == org_info)
     """
     start = time.process_time()
-    info = [0, 0, 7, 34, 8, 20, 38, 29, 10, 41, 1, 17, 43, 5, 43, 9, 32, 3, 45, 16, 5, 4, 8, 23, 5, 37, 5, 7, 13, 1, 4, 14, 6]
+    info = [0, 28, 29, 10, 28, 2, 7, 10, 18, 31, 24, 3, 12, 35, 10, 23, 10, 12, 13, 40, 8, 10, 43, 21, 40, 21, 15, 44, 37, 3, 3, 33, 7]
+
     inner_encoder = reedSolomon.Generalized_Reed_Solomon(field_size=47,
                                                          message_length=39,
                                                          payload_length=33,
