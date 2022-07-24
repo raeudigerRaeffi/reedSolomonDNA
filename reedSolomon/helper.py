@@ -113,7 +113,6 @@ class Galois_Helper():
         return output
 
     def ifft_on_matrix(self, matrix):
-        print("matrix", matrix, type(matrix))
         n = len(matrix)
         output = []
         for i in range(0, n):
@@ -123,11 +122,6 @@ class Galois_Helper():
 
                 p = self.get_nth_unity_root_of_field(n)
                 vec = self.field(matrix[j])
-                print("p", p, type(p))
-                print("p_factor", p_factor, type(p_factor))
-                print("vec", vec, type(vec))
-                print("output_vec", output_vec, type(output_vec))
-                print("Power", (p**p_factor * vec), type((p**p_factor * vec)))
                 output_vec = output_vec + (p**p_factor * vec)
             output_vec = int(-self.base_field(1) / self.base_field(n %
                              self.base_field.characteristic)) * output_vec

@@ -105,8 +105,6 @@ def encode(string_file_name, numpy_boolean_array):
     # encode daten
     reedWorker.startRsCode(dataList, 0)
 
-    return 0
-
     # 47**3 (Array[Array[713,39]]) -> ACGT (List(x*713) of Strings(117))
     for block in dataList:
         for x in range(0, 713):
@@ -160,7 +158,7 @@ def decode(string_file_name, list_of_dna_strings):
                 pos += 1
 
     # decode daten
-    # reedWorker.startRsCode(dataList, 1)
+    reedWorker.startRsCode(dataList, 1)
 
     # 47**3 (Array[Array[713,39]]) -> 47**3 (List) #TODO here could be an error
     output = []
@@ -199,7 +197,6 @@ if __name__ == "__main__":
 
     print("Encoding...")
     arr = encode("", input_arr)
-    sys.exit("Test")
     print("Decoding...")
     arr2 = decode("", arr)
 

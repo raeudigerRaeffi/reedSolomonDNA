@@ -4,6 +4,7 @@ from . import basereedsolomon
 
 
 class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
+
     def __init__(self, field_size: int, message_length: int, payload_length: int, symbol_size: int, p_factor: int, irr_poly=None, multi_processing=False, debug=False) -> None:
         """Generalized Reed Solomon class. Can have arbitary message length as long as n%p and can be parralized by a factor of p
         Args:
@@ -126,9 +127,15 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         for f_index in range(0, self.p):
             f_i = gl.Poly(fft[f_index], field=self.galois_field)
             self.helper.debug_print(
-                "fi", f_i, fft[f_index], f_i % self.generator_set[f_index])
-            f_values.append(
-                (f_i % self.generator_set[f_index]).coeffs.tolist())
+                "fi", f_i, fft[f_index], f_i % self.generator_set[f_index], self.generator_set[f_index])
+
+            # handles case when lth degree of polynominal is zero after modulo
+            f_values_to_add = (
+                f_i % self.generator_set[f_index]).coeffs.tolist()
+            if len(f_values_to_add) < l:
+                f_values_to_add = [0] * \
+                    (l - len(f_values_to_add)) + f_values_to_add
+            f_values.append(f_values_to_add)
 
         # calculates adjusted f
         if self.d != 0:
@@ -197,6 +204,7 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
             return recieved_msg
         self.helper.debug_print("syndromes", syndromes)
 
+        print("syndroms:", syndromes)
         galois_lfsr = gl.berlekamp_massey(
             self.galois_field(syndromes), "galois")
         error_locator_polynominal = galois_lfsr.feedback_poly
@@ -425,9 +433,5 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
                     break
                 parity_symbol = parity_arry.pop(len(parity_arry)-1)
                 output_symbols.append(parity_symbol)
-
-        #print("output message", output_msg, type(output_msg), len(output_msg))
-        # print("output_symbols",
-        #      output_symbols[::-1], type(output_symbols[::-1]), len(output_symbols[::-1]))
 
         return output_msg + output_symbols[::-1]

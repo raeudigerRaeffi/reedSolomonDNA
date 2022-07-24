@@ -4,8 +4,8 @@ import utils.sortBlock as sortBlock
 
 
 class parallelReed():
-    #cores = 8
-    #pool = None
+    # cores = 8
+    # pool = None
     inner_encoder = None
     outer_encoder = None
 
@@ -13,7 +13,7 @@ class parallelReed():
         self.inner_encoder = inner_encoder
         self.outer_encoder = outer_encoder
         # Count number of cpu cores
-        #parallelReed.cores = multiprocessing.cpu_count()
+        # parallelReed.cores = multiprocessing.cpu_count()
 
         # create Pool
         # self.pool = multiprocessing.Pool(
@@ -44,11 +44,10 @@ class parallelReed():
         return_dict = manager.dict()
 
         if(codingType == 0):
-            print("Encode")
             # start outer encode
             for x, block in enumerate(inputList):
                 parallelReed.encodeOuter(
-                    block[119:713, 3:33], self.outer_encoder, x, return_dict)
+                    block[119:713, 3:33].tolist(), self.outer_encoder, x, return_dict)
                 # self.pool.apply_async(func=parallelReed.encodeOuter, args=(
                 #    block[119:713, 3:33], self.outer_encoder, x, return_dict))
 
@@ -74,10 +73,6 @@ class parallelReed():
             # start inner encode
             for x, block in enumerate(inputList):
                 for y, column in enumerate(block):
-                    print(((x * 713) + y))
-                    print(column[0:33])
-                    print(column[0:33].tolist())
-                    print(len(column[0:33].tolist()))
                     parallelReed.encodeInner(
                         column[0:33].tolist(), self.inner_encoder, ((x * 713) + y), return_dict)
                     # self.pool.apply_async(func=parallelReed.encodeInner, args=(
@@ -89,21 +84,18 @@ class parallelReed():
 
             # fill in results
             for x, block in enumerate(inputList):
-                block[0:713, 33:39]
                 for y, column in enumerate(block):
                     column[33:39] = return_dict.get((x * 713) + y)[33:39]
-                block[0:713, 33:39]
 
             return_dict.clear()
-
-            # Ergebnis steht nun in inputList
         else:
-            print("Decode")
             # start inner decode
             for x, block in enumerate(inputList):
                 for y, column in enumerate(block):
+                    print(((x * 713) + y))
+                    print(column.tolist())
                     parallelReed.decodeInner(
-                        column, self.inner_encoder, ((x * 713) + y), return_dict)
+                        column.tolist(), self.inner_encoder, ((x * 713) + y), return_dict)
                     # self.pool.apply_async(func=parallelReed.decodeInner, args=(
                     #    column, self.inner_encoder, x, return_dict))
 
@@ -113,10 +105,10 @@ class parallelReed():
 
             # fill in results
             for x, block in enumerate(inputList):
-                block[0:713, 0:33]
+                print(block[0:713, 0:33])
                 for y, column in enumerate(block):
                     column[0:33] = return_dict.get((x * 713) + y)
-                block[0:713, 0:33]
+                print(block[0:713, 0:33])
 
             return_dict.clear()
 
@@ -133,8 +125,9 @@ class parallelReed():
 
             # start outer decode
             for x, block in enumerate(inputList):
+                print(block[0:713, 3:33])
                 parallelReed.decodeOuter(
-                    block[0:713, 3:33], self.outer_encoder, x, return_dict)
+                    block[0:713, 3:33].tolist(), self.outer_encoder, x, return_dict)
                 # self.pool.apply_async(func=parallelReed.encodeOuter, args=(
                 #    block[119:713, 3:33], self.outer_encoder, x, return_dict))
 
@@ -147,7 +140,7 @@ class parallelReed():
                 block[119:713, 3:33] = return_dict.get(x)
                 print(return_dict.get(x))
                 print(block[119:713, 3:33])
-                #pos = 0
+                # pos = 0
                 # for y in range(594, 713):
                 #    block[pos, 3:33] = return_dict.get(x)[y]
                 #    pos += 1

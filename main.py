@@ -53,35 +53,20 @@ if __name__ == '__main__':
     print(dec_test_normal == org_info)
     """
     start = time.process_time()
-    info_symbols = [
-        [20,5],
-        [35,10],
-        [5,10],
-        [35,20],
-        [35,10],
-        [3,10],
-        [35,10],
-        [35,2],
-        [5,10],
-        [35,10]
-    ]
-     
-    test_normal_rs =reedSolomon.Generalized_Reed_Solomon(field_size=47,
-                                                                 message_length=14,
-                                                                 payload_length=10,
-                                                                 symbol_size=2,
-                                                                 p_factor=2,
-                                                         
-                                                                debug=True)
-    symbols = test_normal_rs.convert_to_symbol_array(info_symbols)
-    print("symbols",symbols)
-    symbols_encoded = test_normal_rs.encode(symbols)
-    symbols_encoded[0] =1
-    symbols_decoded = test_normal_rs.decode(symbols_encoded)
-    conv_back = test_normal_rs.symbol_array_to_array(symbols_decoded)
-    
-    print(conv_back)
-    print(info_symbols == conv_back)
+    info = [0, 0, 7, 34, 8, 20, 38, 29, 10, 41, 1, 17, 43, 5, 43, 9, 32, 3, 45, 16, 5, 4, 8, 23, 5, 37, 5, 7, 13, 1, 4, 14, 6]
+    inner_encoder = reedSolomon.Generalized_Reed_Solomon(field_size=47,
+                                                         message_length=39,
+                                                         payload_length=33,
+                                                         symbol_size=1,
+                                                         p_factor=2)
+
+    print(len(info))
+    encoded = inner_encoder.encode(info)
+    encoded[0] = 2
+    encoded[1] = 2
+    decoded = inner_encoder.decode(encoded)
+    print(decoded)
+    print(info == decoded)
     print(time.process_time() - start)
     
     print(str(time.perf_counter()/1000)+' s')
