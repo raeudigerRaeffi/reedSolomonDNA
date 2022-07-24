@@ -42,16 +42,14 @@ def encode(string_file_name, numpy_boolean_array):
     list_of_dna_strings = []
     dna_wheel_instance = dna_wheel()
 
-    # reed codes
-    '''
-    irr_poly_47 = [1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-                   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, 32]
+    # reed codes   #TODO markieren!!!
     inner_encoder = reedSolomon.Generalized_Reed_Solomon(field_size=47,
                                                          message_length=39,
                                                          payload_length=33,
-                                                         symbol_size=30,
-                                                         p_factor=7,
-                                                         irr_poly=irr_poly_47)
+                                                         symbol_size=1,
+                                                         p_factor=2)
+    irr_poly_47 = [1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+                   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, 32]
     outer_encoder = reedSolomon.Generalized_Reed_Solomon(field_size=47,
                                                          message_length=713,
                                                          payload_length=594,
@@ -59,7 +57,6 @@ def encode(string_file_name, numpy_boolean_array):
                                                          p_factor=7,
                                                          irr_poly=irr_poly_47)
     reedWorker = parallelReed(inner_encoder, outer_encoder)
-    '''
 
     # Boolean (Array[n:1]) -> 256**2 (List)
     arr_out = []
@@ -106,8 +103,9 @@ def encode(string_file_name, numpy_boolean_array):
         (dataList[block])[x][y] = d
 
     # encode daten
-    # TODO inner or outer needs to be changeds
-    # reedWorker.startRsCode(dataList, 0)
+    reedWorker.startRsCode(dataList, 0)
+
+    return 0
 
     # 47**3 (Array[Array[713,39]]) -> ACGT (List(x*713) of Strings(117))
     for block in dataList:
@@ -125,15 +123,13 @@ def decode(string_file_name, list_of_dna_strings):
     dna_wheel_instance = dna_wheel()
 
     # reed codes
-    '''
-    irr_poly_47 = [1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-                   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, 32]
     inner_encoder = reedSolomon.Generalized_Reed_Solomon(field_size=47,
                                                          message_length=39,
                                                          payload_length=33,
-                                                         symbol_size=30,
-                                                         p_factor=7,
-                                                         irr_poly=irr_poly_47)
+                                                         symbol_size=1,
+                                                         p_factor=2)
+    irr_poly_47 = [1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+                   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1, 32]
     outer_encoder = reedSolomon.Generalized_Reed_Solomon(field_size=47,
                                                          message_length=713,
                                                          payload_length=594,
@@ -141,7 +137,6 @@ def decode(string_file_name, list_of_dna_strings):
                                                          p_factor=7,
                                                          irr_poly=irr_poly_47)
     reedWorker = parallelReed(inner_encoder, outer_encoder)
-    '''
 
     # ACGT (List(x*713) of Strings(117)) -> 47**3 (Array[Array[713,39]])
     dataList = []
@@ -190,6 +185,7 @@ def decode(string_file_name, list_of_dna_strings):
 
 
 if __name__ == "__main__":
+    __spec__ = "ModuleSpec(name='builtins', loader=<class '_frozen_importlib.BuiltinImporter'>)"
     # load numpy arrays from files.
     # has boolean values <- convert boolean to numbers and later numbers to boolean. Way more work?
     # use numpy save to save the result
@@ -198,11 +194,12 @@ if __name__ == "__main__":
 
     # Teste data -> encode() -> decode() -> data (ohne rs codes)
     print("Load File...")
-    # input_arr = np.load("data/La_Jeunesse.npy") # kurzes test-set
-    input_arr = np.load("data/Ulysses.npy")  # langes test-set
+    input_arr = np.load("data/La_Jeunesse.npy")  # kurzes test-set
+    # input_arr = np.load("data/Ulysses.npy")  # langes test-set
 
     print("Encoding...")
     arr = encode("", input_arr)
+    sys.exit("Test")
     print("Decoding...")
     arr2 = decode("", arr)
 
