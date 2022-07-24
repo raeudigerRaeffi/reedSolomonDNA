@@ -4,8 +4,20 @@ from . import basereedsolomon
 
 
 class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
-
-    def __init__(self, field_size: int, message_length: int, payload_length: int, symbol_size: int, p_factor: int, irr_poly=None, multi_processing=True, debug=False) -> None:
+    def __init__(self, field_size: int, message_length: int, payload_length: int, symbol_size: int, p_factor: int, irr_poly=None, multi_processing=False, debug=False) -> None:
+        """Generalized Reed Solomon class. Can have arbitary message length as long as n%p and can be parralized by a factor of p
+        Args:
+            field_size (int): field characteristic
+            message_length (int): message length
+            payload_length (int): length of info symbols
+            symbol_size (int): field degree
+            p_factor (int): split up factor of the code
+            irr_poly (list, optional): irreducible polynominal over which the field is to be constructed. Defaults to None.
+            multi_processing (boolean, optional): allows multiprocessing of some steps. Defaults to False.
+            debug (bool, optional): determines whether steps should be printed to console. Defaults to True.
+        Raises:
+            ValueError: _description_
+        """
         super().__init__(field_size, message_length, payload_length,
                          symbol_size, multi_processing, irr_poly, debug, p_factor)
         self.p = p_factor
@@ -38,6 +50,14 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         # divisibility of n, k and r should be checked
 
     def encode(self, message):
+        """_summary_
+        Args:
+            message (list): _description_
+        Raises:
+            ValueError: triggers in case that the provided message symbol length is unequal to the indicated one
+        Returns:
+            list: message with parity symbols attached
+        """
         if len(message) != self.payload_length:
             raise ValueError("Length not as specified")
         self.helper.debug_print("encode input message:", message, len(message))
@@ -49,10 +69,18 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         msg = self.encode_classic(message)
         self.helper.debug_print("before cutoff", msg, len(msg))
         # + msg[self.payload_length + self.num_of_padded_zeros:len(msg)]
-        msg = msg[self.num_of_padded_zeros:len(msg)]
+        msg = [int(x)for x in msg[self.num_of_padded_zeros:len(msg)]]
         return msg
 
     def decode(self, recieved_msg):
+        """decodes a message with parity bits
+        Args:
+            recieved_msg (list): message with parity bits
+        Raises:
+            ValueError: raises error if recieved_msg is unequal to initalized message length
+        Returns:
+            list: returns section of the decoded message that corresponds to the info symbols
+        """
         if len(recieved_msg) != (self.message_length):
             self.helper.debug_print(
                 "decode input message", recieved_msg, len(recieved_msg))
@@ -66,6 +94,12 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         return self.return_info_symbols(corrected_msg)
 
     def encode_classic(self, message):
+        """performs encoding steps
+        Args:
+            message (list): list of galois symbols in int representation
+        Returns:
+            list: message list with added paroty symbols
+        """
         # only used in case where self.d != 0
         coefficent_vector = []
 
@@ -151,7 +185,12 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         return output_message
 
     def decode_classic(self, recieved_msg):
-
+        """performs the decoding steps
+        Args:
+            recieved_msg (list): message list with parity symbols
+        Returns:
+            list: corrected message 
+        """
         syndromes = self.calc_syndrome(recieved_msg)
 
         if np.all(syndromes == self.galois_field(0)):
@@ -188,11 +227,25 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         return [int(symbol) for symbol in (self.galois_field(recieved_msg) + correction_msg)]
 
     def primitive_element_adjusted(self, index):
+        """returns the primitive element adjusted
+        Args:
+            index (int): index in order to adjust primitive element
+        Returns:
+            galois element: value of the primitive adjusted elment acording to the index value
+        """
         factor_unity = index % self.p
         factor_primitive = divmod(index, self.p)[0]
         return self.p_unity**factor_unity * self.primitive**factor_primitive
 
     def return_generalized_generator(self, index):
+        """returns a generator polynominal
+        Args:
+            index (int): indicates which generator polynominal should be generated range is 0 - p-1
+        Raises:
+            ValueError: if index is is outside 0 - p-1
+        Returns:
+            galois poly: _description_
+        """
         if index >= self.p:
             raise ValueError(
                 "Generator polynominals can only be generated from 0 to p-1")
@@ -207,6 +260,12 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         return output_poly
 
     def input_arr_to_matrix(self, _arr):
+        """splits input message into p components up
+        Args:
+            _arr (list): input message
+        Returns:
+            list: list consisting of input message split up into p lists
+        """
         output = []
         p = self.p
         intermediate_arr = []
@@ -218,12 +277,17 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         return np.array(np.transpose(output))
 
     def calc_syndrome(self, recieved_codeword):
-
+        """calculates syndrome values based on the divided codewords
+        Args:
+            recieved_codeword (list): recieved codeword
+        Returns:
+            list: list consisting of galois elements
+        """
         output_syndromes = []
         m = len(recieved_codeword) // self.p
         self.helper.debug_print(
             "recieved codeword before syndrome", self.galois_field(recieved_codeword), m)
-        #m = len(recieved_codeword) // self.p
+
         divided_codeword = []
         for l_index in range(0, self.p):
             syndrome = []
@@ -255,6 +319,12 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
 
     # modified version for parallelization
     def modified_chien_search(self, error_locator_poly):
+        """performs chien search on the divided codeword 
+        Args:
+            error_locator_poly (list): list containing the coefficents of the error locator polynominal
+        Returns:
+            list: list containing the error locations as galois elements
+        """
         error_locations = []
 
         m = (self.message_length + self.num_of_padded_zeros) // self.p
@@ -277,6 +347,14 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         return error_locations
 
     def modified_forney(self, error_location_poly, error_evaluator_poly, error_loc):
+        """calculates the error magintudes
+        Args:
+            error_location_poly (list): error location polynominal as a list of coefficents
+            error_evaluator_poly (galois Poly): error evaluator polynominal
+            error_loc (list): error locations
+        Returns:
+            list: list containing the error magnitudes as galois elements
+        """
         error_magnitudes = []
         for r in error_loc:
             a_i = self.primitive_element_adjusted(r)
@@ -286,6 +364,12 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         return error_magnitudes
 
     def return_info_symbols(self, msg):
+        """slices a message in order to return the k information symbols
+        Args:
+            msg (list): codeword
+        Returns:
+            list: containing the infor symbols
+        """
         return msg[self.num_of_padded_zeros:self.num_of_padded_zeros + self.payload_length]
 
     def calculate_t_matrix(self):
@@ -323,9 +407,15 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         return self.galois_field(np.matrix(output_matrix))
 
     def append_parity_symbols(self, message, parity_symbols):
+        """appends parity symbols to the message
+        Args:
+            message (list): consists of galois elements
+            parity_symbols (list):  consists of galois elements
+        Returns:
+            list: message with parity symbols
+        """
         output_msg = message
         output_symbols = []
-        index = 0
         parity_symbols = parity_symbols
         while len(parity_symbols) != 0:
             for parity_arry in parity_symbols:
@@ -335,5 +425,9 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
                     break
                 parity_symbol = parity_arry.pop(len(parity_arry)-1)
                 output_symbols.append(parity_symbol)
+
+        #print("output message", output_msg, type(output_msg), len(output_msg))
+        # print("output_symbols",
+        #      output_symbols[::-1], type(output_symbols[::-1]), len(output_symbols[::-1]))
 
         return output_msg + output_symbols[::-1]

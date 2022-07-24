@@ -74,8 +74,12 @@ class parallelReed():
             # start inner encode
             for x, block in enumerate(inputList):
                 for y, column in enumerate(block):
+                    print(((x * 713) + y))
+                    print(column[0:33])
+                    print(column[0:33].tolist())
+                    print(len(column[0:33].tolist()))
                     parallelReed.encodeInner(
-                        column[0:33], self.inner_encoder, ((x * 713) + y), return_dict)
+                        column[0:33].tolist(), self.inner_encoder, ((x * 713) + y), return_dict)
                     # self.pool.apply_async(func=parallelReed.encodeInner, args=(
                     #    column, self.inner_encoder, x, return_dict))
 
@@ -118,6 +122,9 @@ class parallelReed():
 
             # sort columns
             # 1. create new blocks
+
+            # doppelte einfach abspeichern und in leere plätze einfügen
+
             # 2. put in columns on correct spot (sort & delete)
             # 3. save doubled data
             # 4. check if we can remove empty blocks (at the end)
