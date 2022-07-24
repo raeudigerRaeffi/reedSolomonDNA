@@ -132,8 +132,13 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
         self.helper.debug_print("fft",self.galois_field(fft))
         for f_index in range(0,self.p):
             f_i = gl.Poly(fft[f_index],field=self.galois_field)
-            self.helper.debug_print("fi",f_i,fft[f_index],f_i% self.generator_set[f_index] )
-            f_values.append((f_i % self.generator_set[f_index]).coeffs.tolist())
+            self.helper.debug_print("fi",f_i,fft[f_index],f_i% self.generator_set[f_index],self.generator_set[f_index] )
+            
+            ## handles case when lth degree of polynominal is zero after modulo
+            f_values_to_add = (f_i % self.generator_set[f_index]).coeffs.tolist()
+            if len(f_values_to_add) < l:
+                f_values_to_add = [0] + f_values_to_add
+            f_values.append(f_values_to_add)
 
         
         
