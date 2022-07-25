@@ -4,7 +4,6 @@ from . import basereedsolomon
 
 
 class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
-
     def __init__(self, field_size: int, message_length: int, payload_length: int, symbol_size: int, p_factor: int, irr_poly=None, multi_processing=False, debug=False) -> None:
         """Generalized Reed Solomon class. Can have arbitary message length as long as n%p and can be parralized by a factor of p
         Args:
@@ -204,7 +203,6 @@ class Generalized_Reed_Solomon(basereedsolomon.Base_Reed_Solomon):
             return recieved_msg
         self.helper.debug_print("syndromes", syndromes)
 
-        print("syndroms:", syndromes)
         galois_lfsr = gl.berlekamp_massey(
             self.galois_field(syndromes), "galois")
         error_locator_polynominal = galois_lfsr.feedback_poly
