@@ -1,22 +1,4 @@
 class NumberSystemConversion():
-    '''
-    Following code can be used as unit test:
-
-    errors = 0
-    for x in range(0, 256):
-        for y in range(0, 256):
-            test_set = [x, y]
-            converted_test_set = nsc.char2pfe(test_set)
-            reverted_test_set = nsc.pfe2char(converted_test_set)
-            for i, ele in enumerate(test_set):
-                if(reverted_test_set[i] != ele):
-                    print("Error!", test_set,
-                          converted_test_set, reverted_test_set)
-                    errors += 1
-                    break
-
-    print(errors)
-    '''
     # C++ implementierung
     def tobase(nu, base, size):
         nn = []
@@ -68,28 +50,3 @@ class NumberSystemConversion():
             output.extend(tmpvec)
 
         return output
-
-    # Raffaels implementierung
-    def convert_between_bases(num_arr, origin_base, target_base, target_degree):
-        def to_base_10(num_arr, origin_base):
-            num = 0
-            for index, element in enumerate(num_arr[::-1]):
-                if element >= origin_base:
-                    raise ValueError("Val cant be higher than base")
-                num = num + (element * origin_base*index)
-            return num
-
-        def from_10_to_base(num, target_base):
-            digits = []
-            if num == 0:
-                return [0]
-            while num:
-                digits.append(int(num % target_base))
-                num //= target_base
-            return digits[::-1]
-
-        new_base_rep = from_10_to_base(
-            to_base_10(num_arr, origin_base), target_base)
-        if len(new_base_rep) < target_degree:
-            return (target_degree - len(new_base_rep))[0] + new_base_rep
-        return new_base_rep
