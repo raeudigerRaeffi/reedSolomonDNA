@@ -1,7 +1,4 @@
-import time
-import multiprocessing
 import numpy as np
-import reedSolomon
 
 
 class parallelReed():
@@ -29,7 +26,6 @@ class parallelReed():
         return_dict[pos] = decoder.symbol_array_to_array(output_vec)
 
     def encode(self, inputList, return_dict):
-        print(len(inputList))
         # start outer encode
         for x, block in enumerate(inputList):
             parallelReed.encodeOuter(
@@ -121,8 +117,7 @@ class parallelReed():
     # Input should be a list of arrays with array-size (713x39)
     def startRsCode(self, inputList, codingType):
         # create manager/dict for return values
-        manager = multiprocessing.Manager()
-        return_dict = manager.dict()
+        return_dict = {}
 
         if(codingType == 0):
             self.encode(inputList, return_dict)
