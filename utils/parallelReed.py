@@ -31,7 +31,7 @@ class parallelReed():
             parallelReed.encodeOuter(
                 block[119:713, 3:33].tolist(), self.outer_encoder, x, return_dict)
 
-        # fill in results
+        # fill in results (pairty symbols?)
         for x, block in enumerate(inputList):
             block[0:119, 3:33] = return_dict.get(x)[594:713]
 

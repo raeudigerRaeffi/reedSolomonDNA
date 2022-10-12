@@ -116,7 +116,7 @@ def encode_input(string_file_name:str, numpy_boolean_array):
         
         
 def decode_input(string_file_name:str, list_of_dna_strings:list):
-    if not list_of_dna_strings:
+    if list_of_dna_strings:
         return list_of_dna_strings
     elif string_file_name != '':
         try:
